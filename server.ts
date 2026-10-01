@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response } from 'express';
+import express, { type NextFunction, type Request, type Response } from 'express';
 import http from 'http';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
@@ -6,14 +6,12 @@ import { WebSocket, WebSocketServer } from 'ws';
 import { db } from './src/server/db.ts';
 import { PermissionDeniedError } from './src/server/rls.ts';
 import { DEMO_PASSWORD } from './src/server/seed.ts';
-import { User, UserRole } from './src/shared/types.ts';
+import type { User, UserRole } from './src/shared/types.ts';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: User;
-      token?: string;
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: User;
+    token?: string;
   }
 }
 
@@ -30,7 +28,7 @@ interface PresenceClient {
 async function startServer() {
   const app = express();
   const server = http.createServer(app);
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json({ limit: '16mb' }));
 
@@ -165,32 +163,29 @@ async function startServer() {
 
   // --- Auth Routes ---
   app.get('/api/auth/dev-config', (_req, res) => {
-    const isDev = process.env.NODE_ENV !== 'production';
     res.json({
-      isDev,
-      demoPassword: isDev ? DEMO_PASSWORD : null,
-      demoAccounts: isDev
-        ? [
-            {
-              name: 'Alex Rivera',
-              email: 'alex.rivera@primemeet.io',
-              role: 'SUPER_ADMIN',
-              portalLabel: 'Admin Portal',
-            },
-            {
-              name: 'Sarah Chen',
-              email: 'sarah.chen@primemeet.io',
-              role: 'PROJECT_MANAGER',
-              portalLabel: 'Manager Portal',
-            },
-            {
-              name: 'David Kim',
-              email: 'david.kim@primemeet.io',
-              role: 'TEAM_MEMBER',
-              portalLabel: 'Member Portal',
-            },
-          ]
-        : [],
+      isDev: true,
+      demoPassword: DEMO_PASSWORD,
+      demoAccounts: [
+        {
+          name: 'Alex Rivera',
+          email: 'alex.rivera@primemeet.io',
+          role: 'SUPER_ADMIN',
+          portalLabel: 'Admin Portal',
+        },
+        {
+          name: 'Sarah Chen',
+          email: 'sarah.chen@primemeet.io',
+          role: 'PROJECT_MANAGER',
+          portalLabel: 'Manager Portal',
+        },
+        {
+          name: 'David Kim',
+          email: 'david.kim@primemeet.io',
+          role: 'TEAM_MEMBER',
+          portalLabel: 'Member Portal',
+        },
+      ],
     });
   });
 

@@ -1,4 +1,5 @@
 import {
+  AssignmentMode,
   EnrichedActivityLog,
   EnrichedAttachment,
   EnrichedComment,
@@ -9,6 +10,7 @@ import {
   OrganizationMember,
   Priority,
   ProjectStatus,
+  ProjectType,
   TaskStatus,
   User,
   UserRole,
@@ -152,7 +154,13 @@ export const api = {
 
   updateUser: (
     userId: string,
-    updates: { name?: string; avatar?: string; role?: UserRole }
+    updates: {
+      name?: string;
+      avatar?: string;
+      role?: UserRole;
+      specialization?: ProjectType;
+      managerId?: string | null;
+    }
   ) =>
     request<{ user: User }>(`/api/users/${userId}`, {
       method: 'PATCH',
@@ -236,11 +244,14 @@ export const api = {
   createProject: (input: {
     organizationId?: string;
     name: string;
+    projectType?: ProjectType;
     description: string;
     status?: ProjectStatus;
     priority?: Priority;
     startDate?: string;
     dueDate: string;
+    managerId?: string;
+    assignmentMode?: AssignmentMode;
     memberIds?: string[];
   }) =>
     request<{ project: EnrichedProject }>('/api/projects', {
@@ -252,11 +263,15 @@ export const api = {
     projectId: string,
     updates: Partial<{
       name: string;
+      projectType: ProjectType;
       description: string;
       status: ProjectStatus;
       priority: Priority;
       startDate: string;
       dueDate: string;
+      managerId: string;
+      assignmentMode: AssignmentMode;
+      memberIds: string[];
     }>
   ) =>
     request<{ project: EnrichedProject }>(`/api/projects/${projectId}`, {
@@ -298,6 +313,8 @@ export const api = {
     title: string;
     description: string;
     assigneeId?: string | null;
+    assignmentMode?: AssignmentMode;
+    teamAssigneeIds?: string[];
     priority?: Priority;
     status?: TaskStatus;
     dueDate: string;
@@ -314,6 +331,8 @@ export const api = {
       title: string;
       description: string;
       assigneeId: string | null;
+      assignmentMode: AssignmentMode;
+      teamAssigneeIds: string[];
       priority: Priority;
       status: TaskStatus;
       dueDate: string;

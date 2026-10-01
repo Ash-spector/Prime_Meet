@@ -2,33 +2,36 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import {
-  ActivityLog,
-  Attachment,
-  Comment,
-  EnrichedActivityLog,
-  EnrichedAttachment,
-  EnrichedComment,
-  EnrichedProject,
-  EnrichedTask,
-  Notification,
+  type ActivityLog,
+  AssignmentMode,
+  type Attachment,
+  type Comment,
+  type EnrichedActivityLog,
+  type EnrichedAttachment,
+  type EnrichedComment,
+  type EnrichedProject,
+  type EnrichedTask,
+  type Notification,
   NotificationType,
-  Organization,
-  OrganizationMember,
+  type Organization,
+  type OrganizationMember,
   Priority,
-  Project,
-  ProjectMember,
+  type Project,
+  type ProjectMember,
   ProjectStatus,
-  Task,
+  PROJECT_TYPE_LABELS,
+  ProjectType,
+  type Task,
   TaskStatus,
-  User,
+  type User,
   UserRole,
 } from '../shared/types.ts';
 import { PermissionDeniedError, RLS } from './rls.ts';
 import {
   createInitialSeedData,
-  DatabaseSchema,
+  type DatabaseSchema,
   hashPassword,
-  StoredUser,
+  type StoredUser,
   verifyPassword,
 } from './seed.ts';
 
@@ -66,10 +69,13 @@ function ensureDirectories() {
 export function sanitizeUser(u: StoredUser): User {
   return {
     id: u.id,
+    uniqueCode: u.uniqueCode || `USR-${u.id.slice(-4).toUpperCase()}`,
     name: u.name,
     email: u.email,
     avatar: u.avatar,
     role: u.role,
+    specialization: u.specialization || ProjectType.WEB_DEVELOPMENT,
+    managerId: u.managerId ?? null,
     createdAt: u.createdAt,
     updatedAt: u.updatedAt,
   };
@@ -83,13 +89,191 @@ class DatabaseEngine {
     this.state = this.loadOrSeed();
   }
 
+  private migrateSchemaIfNeeded(parsed: DatabaseSchema): DatabaseSchema {
+    const referenceSeed = createInitialSeedData();
+    let changed = false;
+
+    // 1. Ensure all seeded users exist and have uniqueCode, specialization, managerId
+    for (const seedUser of referenceSeed.users) {
+      const existing = parsed.users.find((u) => u.id === seedUser.id);
+      if (!existing) {
+        parsed.users.push(seedUser);
+        if (parsed.organizations[0]) {
+          parsed.organizationMembers.push({
+            id: `org_mem_${crypto.randomBytes(4).toString('hex')}`,
+            organizationId: parsed.organizations[0].id,
+            userId: seedUser.id,
+            role: seedUser.role,
+            createdAt: seedUser.createdAt,
+          });
+        }
+        changed = true;
+      } else {
+        if (!existing.uniqueCode) {
+          existing.uniqueCode = seedUser.uniqueCode;
+          changed = true;
+        }
+        if (!existing.specialization) {
+          existing.specialization = seedUser.specialization;
+          changed = true;
+        }
+        if (existing.managerId === undefined) {
+          existing.managerId = seedUser.managerId;
+          changed = true;
+        }
+      }
+    }
+
+    // Backfill any custom created users
+    parsed.users.forEach((u, idx) => {
+      if (!u.uniqueCode) {
+        const prefix =
+          u.role === UserRole.SUPER_ADMIN
+            ? 'ADM'
+            : u.role === UserRole.PROJECT_MANAGER
+            ? 'PM'
+            : 'MEM';
+        u.uniqueCode = `${prefix}-${200 + idx}`;
+        changed = true;
+      }
+      if (!u.specialization) {
+        u.specialization = ProjectType.WEB_DEVELOPMENT;
+        changed = true;
+      }
+      if (u.managerId === undefined) {
+        u.managerId = u.role === UserRole.TEAM_MEMBER ? 'usr_mgr_sarah' : null;
+        changed = true;
+      }
+    });
+
+    // 2. Backfill projects with projectType, assignmentMode, and valid domain Project Manager
+    for (const proj of parsed.projects) {
+      const seedProj = referenceSeed.projects.find((sp) => sp.id === proj.id);
+      if (!proj.projectType) {
+        proj.projectType = seedProj?.projectType || ProjectType.WEB_DEVELOPMENT;
+        changed = true;
+      }
+      if (!proj.assignmentMode) {
+        proj.assignmentMode = seedProj?.assignmentMode || AssignmentMode.TEAM;
+        changed = true;
+      }
+      if (proj.id === 'prj_website_redesign' && proj.status === ProjectStatus.ARCHIVED) {
+        proj.status = ProjectStatus.ACTIVE;
+        changed = true;
+      }
+      const currentMgr = parsed.users.find((u) => u.id === proj.managerId);
+      if (!currentMgr || currentMgr.role !== UserRole.PROJECT_MANAGER) {
+        const domainMgr =
+          parsed.users.find(
+            (u) =>
+              u.role === UserRole.PROJECT_MANAGER &&
+              u.specialization === proj.projectType
+          ) ||
+          parsed.users.find((u) => u.role === UserRole.PROJECT_MANAGER);
+        if (domainMgr) {
+          proj.managerId = domainMgr.id;
+          const hasMgrMember = parsed.projectMembers.some(
+            (pm) => pm.projectId === proj.id && pm.userId === domainMgr.id
+          );
+          if (!hasMgrMember) {
+            parsed.projectMembers.push({
+              id: `pm_${crypto.randomBytes(4).toString('hex')}`,
+              projectId: proj.id,
+              userId: domainMgr.id,
+              role: 'MANAGER',
+              createdAt: proj.createdAt,
+            });
+          }
+          // Also add direct reports of this manager so the project has a full team roster
+          const directReports = parsed.users.filter(
+            (u) => u.role === UserRole.TEAM_MEMBER && u.managerId === domainMgr.id
+          );
+          for (const rep of directReports) {
+            const hasRep = parsed.projectMembers.some(
+              (pm) => pm.projectId === proj.id && pm.userId === rep.id
+            );
+            if (!hasRep) {
+              parsed.projectMembers.push({
+                id: `pm_${crypto.randomBytes(4).toString('hex')}`,
+                projectId: proj.id,
+                userId: rep.id,
+                role: 'MEMBER',
+                createdAt: proj.createdAt,
+              });
+            }
+          }
+          changed = true;
+        }
+      }
+    }
+
+    // Remove cross-manager membership on prj_marketing_platform so Sarah Chen only sees her own managed portfolio
+    const beforePmLen = parsed.projectMembers.length;
+    parsed.projectMembers = parsed.projectMembers.filter(
+      (pm) =>
+        !(
+          pm.projectId === 'prj_marketing_platform' &&
+          pm.userId === 'usr_mgr_sarah'
+        )
+    );
+    if (parsed.projectMembers.length !== beforePmLen) {
+      changed = true;
+    }
+
+    // Ensure Liam O'Connor is a member of prj_marketing_platform
+    if (
+      !parsed.projectMembers.some(
+        (pm) =>
+          pm.projectId === 'prj_marketing_platform' &&
+          pm.userId === 'usr_mem_liam'
+      )
+    ) {
+      parsed.projectMembers.push({
+        id: 'pm_11',
+        projectId: 'prj_marketing_platform',
+        userId: 'usr_mem_liam',
+        role: 'MEMBER',
+        createdAt: new Date().toISOString(),
+      });
+      changed = true;
+    }
+
+    // 3. Backfill tasks with assignmentMode & teamAssigneeIds
+    for (const tsk of parsed.tasks) {
+      const seedTask = referenceSeed.tasks.find((st) => st.id === tsk.id);
+      if (
+        tsk.id === 'tsk_25' &&
+        tsk.projectId === 'prj_marketing_platform' &&
+        tsk.assigneeId === 'usr_mgr_sarah'
+      ) {
+        tsk.assigneeId = 'usr_mem_liam';
+        tsk.teamAssigneeIds = ['usr_mem_liam'];
+        changed = true;
+      }
+      if (!tsk.assignmentMode) {
+        tsk.assignmentMode = seedTask?.assignmentMode || AssignmentMode.INDIVIDUAL;
+        changed = true;
+      }
+      if (!Array.isArray(tsk.teamAssigneeIds)) {
+        tsk.teamAssigneeIds =
+          seedTask?.teamAssigneeIds || (tsk.assigneeId ? [tsk.assigneeId] : []);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      this.save(parsed);
+    }
+    return parsed;
+  }
+
   private loadOrSeed(): DatabaseSchema {
     if (fs.existsSync(DB_FILE)) {
       try {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');
         const parsed = JSON.parse(raw) as DatabaseSchema;
         if (parsed && Array.isArray(parsed.users) && parsed.users.length > 0) {
-          return parsed;
+          return this.migrateSchemaIfNeeded(parsed);
         }
       } catch (err) {
         console.error('Error loading DB file, re-seeding:', err);
@@ -205,15 +389,19 @@ class DatabaseEngine {
 
     const now = new Date().toISOString();
     const pw = hashPassword(params.password);
+    const memberNumber = 200 + this.state.users.length + 1;
     // New users are ALWAYS TEAM_MEMBER
     const newUser: StoredUser = {
       id: `usr_${crypto.randomBytes(6).toString('hex')}`,
+      uniqueCode: `MEM-WEB-${memberNumber}`,
       name: cleanName,
       email: normalizedEmail,
       avatar: `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(
         cleanName
       )}&backgroundColor=e0e7ff`,
       role: UserRole.TEAM_MEMBER,
+      specialization: ProjectType.WEB_DEVELOPMENT,
+      managerId: 'usr_mgr_sarah',
       passwordHash: pw.hash,
       passwordSalt: pw.salt,
       createdAt: now,
@@ -258,7 +446,7 @@ class DatabaseEngine {
     this.logActivity({
       userId: newUser.id,
       action: 'USER_REGISTERED',
-      description: `${newUser.name} joined PrimeMeet as a Team Member`,
+      description: `${newUser.name} (${newUser.uniqueCode}) joined PrimeMeet as a Team Member`,
     });
 
     this.save();
@@ -290,7 +478,13 @@ class DatabaseEngine {
   public updateUser(
     actor: User,
     targetUserId: string,
-    updates: { name?: string; avatar?: string; role?: UserRole }
+    updates: {
+      name?: string;
+      avatar?: string;
+      role?: UserRole;
+      specialization?: ProjectType;
+      managerId?: string | null;
+    }
   ): User {
     const target = this.state.users.find((u) => u.id === targetUserId);
     if (!target) {
@@ -304,6 +498,12 @@ class DatabaseEngine {
     if (updates.avatar !== undefined && updates.avatar.trim()) {
       target.avatar = updates.avatar.trim();
     }
+    if (updates.specialization !== undefined) {
+      target.specialization = updates.specialization;
+    }
+    if (updates.managerId !== undefined) {
+      target.managerId = updates.managerId;
+    }
     if (updates.role !== undefined) {
       target.role = updates.role;
       for (const om of this.state.organizationMembers) {
@@ -316,7 +516,7 @@ class DatabaseEngine {
     this.logActivity({
       userId: actor.id,
       action: 'USER_UPDATED',
-      description: `Updated profile for ${target.name} (${target.role})`,
+      description: `Updated profile for ${target.name} [${target.uniqueCode}] (${target.role})`,
     });
     this.save();
     return sanitizeUser(target);
@@ -538,6 +738,8 @@ class DatabaseEngine {
 
     return {
       ...project,
+      projectType: project.projectType || ProjectType.WEB_DEVELOPMENT,
+      assignmentMode: project.assignmentMode || AssignmentMode.TEAM,
       organizationName: org?.name,
       manager: userMap.get(project.managerId),
       members,
@@ -614,11 +816,14 @@ class DatabaseEngine {
     input: {
       organizationId?: string;
       name: string;
+      projectType?: ProjectType;
       description: string;
       status?: ProjectStatus;
       priority?: Priority;
       startDate?: string;
       dueDate: string;
+      managerId?: string;
+      assignmentMode?: AssignmentMode;
       memberIds?: string[];
     }
   ): EnrichedProject {
@@ -626,29 +831,61 @@ class DatabaseEngine {
     const now = new Date().toISOString();
     const orgId =
       input.organizationId || this.state.organizations[0]?.id || 'org_primemeet_labs';
+    const projectType = input.projectType || ProjectType.WEB_DEVELOPMENT;
+    const assignedManagerId = input.managerId || actor.id;
+    const assignmentMode = input.assignmentMode || AssignmentMode.TEAM;
+
     const project: Project = {
       id: `prj_${crypto.randomBytes(6).toString('hex')}`,
       organizationId: orgId,
       name: input.name.trim(),
+      projectType,
       description: input.description.trim(),
       status: input.status || ProjectStatus.PLANNING,
       priority: input.priority || Priority.MEDIUM,
       startDate: input.startDate || now,
       dueDate: input.dueDate,
-      managerId: actor.id,
+      managerId: assignedManagerId,
+      assignmentMode,
       createdAt: now,
       updatedAt: now,
     };
 
     this.state.projects.unshift(project);
-    const uniqueMembers = new Set<string>([actor.id, ...(input.memberIds || [])]);
+
+    // Automatically include the assigned manager + any selected members + direct reports of that manager if TEAM mode
+    const directReports =
+      assignmentMode === AssignmentMode.TEAM
+        ? this.state.users
+            .filter((u) => u.managerId === assignedManagerId && u.role === UserRole.TEAM_MEMBER)
+            .map((u) => u.id)
+        : [];
+
+    const uniqueMembers = new Set<string>([
+      assignedManagerId,
+      ...(input.memberIds || []),
+      ...directReports,
+    ]);
+
     for (const uid of uniqueMembers) {
       this.state.projectMembers.push({
         id: `pm_${crypto.randomBytes(6).toString('hex')}`,
         projectId: project.id,
         userId: uid,
-        role: uid === actor.id ? 'MANAGER' : 'MEMBER',
+        role: uid === assignedManagerId ? 'MANAGER' : 'MEMBER',
         createdAt: now,
+      });
+    }
+
+    const assignedMgr = this.state.users.find((u) => u.id === assignedManagerId);
+    const typeLabel = PROJECT_TYPE_LABELS[projectType] || projectType;
+
+    if (assignedManagerId !== actor.id) {
+      this.createNotification({
+        userId: assignedManagerId,
+        type: NotificationType.TASK_ASSIGNED,
+        message: `${actor.name} assigned ${typeLabel} project "${project.name}" to you`,
+        link: `/projects/${project.id}`,
       });
     }
 
@@ -656,7 +893,9 @@ class DatabaseEngine {
       userId: actor.id,
       projectId: project.id,
       action: 'PROJECT_CREATED',
-      description: `Created project "${project.name}"`,
+      description: `Created ${typeLabel} project "${project.name}" assigned to ${
+        assignedMgr ? `${assignedMgr.name} [${assignedMgr.uniqueCode}]` : assignedManagerId
+      } (${assignmentMode})`,
     });
     this.save();
     return this.enrichProject(project);
@@ -668,9 +907,17 @@ class DatabaseEngine {
     updates: Partial<
       Pick<
         Project,
-        'name' | 'description' | 'status' | 'priority' | 'startDate' | 'dueDate'
+        | 'name'
+        | 'projectType'
+        | 'description'
+        | 'status'
+        | 'priority'
+        | 'startDate'
+        | 'dueDate'
+        | 'managerId'
+        | 'assignmentMode'
       >
-    >
+    > & { memberIds?: string[] }
   ): EnrichedProject {
     const project = this.state.projects.find((p) => p.id === projectId);
     if (!project) {
@@ -680,13 +927,62 @@ class DatabaseEngine {
       updates.status === ProjectStatus.ARCHIVED ? 'archive' : 'edit';
     RLS.assertCanModifyProject(actor, project, actionLabel);
 
+    const prevManagerId = project.managerId;
+
     if (updates.name !== undefined) project.name = updates.name.trim();
+    if (updates.projectType !== undefined) project.projectType = updates.projectType;
     if (updates.description !== undefined)
       project.description = updates.description.trim();
     if (updates.status !== undefined) project.status = updates.status;
     if (updates.priority !== undefined) project.priority = updates.priority;
     if (updates.startDate !== undefined) project.startDate = updates.startDate;
     if (updates.dueDate !== undefined) project.dueDate = updates.dueDate;
+    if (updates.assignmentMode !== undefined)
+      project.assignmentMode = updates.assignmentMode;
+    if (updates.managerId !== undefined && updates.managerId.trim()) {
+      project.managerId = updates.managerId.trim();
+      const mgrInMembers = this.state.projectMembers.find(
+        (pm) => pm.projectId === project.id && pm.userId === project.managerId
+      );
+      if (!mgrInMembers) {
+        this.state.projectMembers.push({
+          id: `pm_${crypto.randomBytes(6).toString('hex')}`,
+          projectId: project.id,
+          userId: project.managerId,
+          role: 'MANAGER',
+          createdAt: new Date().toISOString(),
+        });
+      } else {
+        mgrInMembers.role = 'MANAGER';
+      }
+      if (project.managerId !== prevManagerId && project.managerId !== actor.id) {
+        const typeLabel = PROJECT_TYPE_LABELS[project.projectType] || project.projectType;
+        this.createNotification({
+          userId: project.managerId,
+          type: NotificationType.TASK_ASSIGNED,
+          message: `${actor.name} assigned ${typeLabel} project "${project.name}" to you`,
+          link: `/projects/${project.id}`,
+        });
+      }
+    }
+
+    if (Array.isArray(updates.memberIds)) {
+      for (const uid of updates.memberIds) {
+        const exists = this.state.projectMembers.some(
+          (pm) => pm.projectId === project.id && pm.userId === uid
+        );
+        if (!exists) {
+          this.state.projectMembers.push({
+            id: `pm_${crypto.randomBytes(6).toString('hex')}`,
+            projectId: project.id,
+            userId: uid,
+            role: uid === project.managerId ? 'MANAGER' : 'MEMBER',
+            createdAt: new Date().toISOString(),
+          });
+        }
+      }
+    }
+
     project.updatedAt = new Date().toISOString();
 
     this.logActivity({
@@ -760,7 +1056,9 @@ class DatabaseEngine {
         userId: actor.id,
         projectId,
         action: 'MEMBER_ADDED',
-        description: `Added ${addedUser?.name || userId} to project "${project.name}"`,
+        description: `Added ${addedUser?.name || userId} [${
+          addedUser?.uniqueCode || ''
+        }] to project "${project.name}"`,
       });
       this.save();
     }
@@ -816,10 +1114,25 @@ class DatabaseEngine {
       (a) => a.taskId === task.id
     ).length;
 
+    const teamIds =
+      Array.isArray(task.teamAssigneeIds) && task.teamAssigneeIds.length > 0
+        ? task.teamAssigneeIds
+        : task.assigneeId
+        ? [task.assigneeId]
+        : [];
+    const teamAssignees = teamIds
+      .map((uid) => userMap.get(uid))
+      .filter((u): u is User => u !== undefined);
+
     return {
       ...task,
+      assignmentMode: task.assignmentMode || AssignmentMode.INDIVIDUAL,
+      teamAssigneeIds: teamIds,
       projectName: project?.name,
+      projectType: project?.projectType || ProjectType.WEB_DEVELOPMENT,
+      projectManager: project ? userMap.get(project.managerId) : undefined,
       assignee: task.assigneeId ? userMap.get(task.assigneeId) || null : null,
+      teamAssignees,
       createdBy: userMap.get(task.createdById),
       commentCount,
       attachmentCount,
@@ -849,6 +1162,8 @@ class DatabaseEngine {
       title: string;
       description: string;
       assigneeId?: string | null;
+      assignmentMode?: AssignmentMode;
+      teamAssigneeIds?: string[];
       priority?: Priority;
       status?: TaskStatus;
       dueDate: string;
@@ -864,12 +1179,49 @@ class DatabaseEngine {
       (t) => t.projectId === project.id && t.status === status
     );
     const now = new Date().toISOString();
+
+    const assignmentMode = input.assignmentMode || AssignmentMode.INDIVIDUAL;
+    let teamAssigneeIds: string[] = [];
+    let primaryAssigneeId: string | null = input.assigneeId || null;
+
+    if (assignmentMode === AssignmentMode.TEAM) {
+      const rawTeam = Array.isArray(input.teamAssigneeIds)
+        ? input.teamAssigneeIds.filter(Boolean)
+        : [];
+      if (rawTeam.length > 0) {
+        teamAssigneeIds = Array.from(new Set(rawTeam));
+        primaryAssigneeId = primaryAssigneeId || teamAssigneeIds[0] || null;
+      } else if (primaryAssigneeId) {
+        teamAssigneeIds = [primaryAssigneeId];
+      }
+    } else {
+      teamAssigneeIds = primaryAssigneeId ? [primaryAssigneeId] : [];
+    }
+
+    // Ensure all assigned members belong to the project so RLS lets them view & progress the task
+    for (const uid of teamAssigneeIds) {
+      const inProj = this.state.projectMembers.some(
+        (pm) => pm.projectId === project.id && pm.userId === uid
+      );
+      if (!inProj) {
+        this.state.projectMembers.push({
+          id: `pm_${crypto.randomBytes(6).toString('hex')}`,
+          projectId: project.id,
+          userId: uid,
+          role: 'MEMBER',
+          createdAt: now,
+        });
+      }
+    }
+
     const task: Task = {
       id: `tsk_${crypto.randomBytes(6).toString('hex')}`,
       projectId: project.id,
       title: input.title.trim(),
       description: input.description.trim(),
-      assigneeId: input.assigneeId || null,
+      assigneeId: primaryAssigneeId,
+      assignmentMode,
+      teamAssigneeIds,
       createdById: actor.id,
       priority: input.priority || Priority.MEDIUM,
       status,
@@ -882,13 +1234,18 @@ class DatabaseEngine {
 
     this.state.tasks.push(task);
 
-    if (task.assigneeId && task.assigneeId !== actor.id) {
-      this.createNotification({
-        userId: task.assigneeId,
-        type: NotificationType.TASK_ASSIGNED,
-        message: `${actor.name} assigned you to "${task.title}"`,
-        link: `/projects/${project.id}?task=${task.id}`,
-      });
+    // Notify all assigned members
+    for (const recipientId of teamAssigneeIds) {
+      if (recipientId && recipientId !== actor.id) {
+        const modeLabel =
+          assignmentMode === AssignmentMode.TEAM ? 'Team Work' : 'Individual Work';
+        this.createNotification({
+          userId: recipientId,
+          type: NotificationType.TASK_ASSIGNED,
+          message: `${actor.name} [${actor.uniqueCode}] assigned you (${modeLabel}) to "${task.title}" in ${project.name}`,
+          link: `/projects/${project.id}?task=${task.id}`,
+        });
+      }
     }
 
     this.logActivity({
@@ -896,7 +1253,7 @@ class DatabaseEngine {
       projectId: project.id,
       taskId: task.id,
       action: 'TASK_CREATED',
-      description: `Created task "${task.title}" in ${project.name}`,
+      description: `Assigned ${assignmentMode} task "${task.title}" in ${project.name}`,
     });
     this.save();
     return this.enrichTask(task);
@@ -911,6 +1268,8 @@ class DatabaseEngine {
         | 'title'
         | 'description'
         | 'assigneeId'
+        | 'assignmentMode'
+        | 'teamAssigneeIds'
         | 'priority'
         | 'status'
         | 'dueDate'
@@ -932,7 +1291,20 @@ class DatabaseEngine {
     if (updates.title !== undefined) task.title = updates.title.trim();
     if (updates.description !== undefined)
       task.description = updates.description.trim();
-    if (updates.assigneeId !== undefined) task.assigneeId = updates.assigneeId;
+    if (updates.assignmentMode !== undefined)
+      task.assignmentMode = updates.assignmentMode;
+    if (updates.assigneeId !== undefined) {
+      task.assigneeId = updates.assigneeId;
+      if (task.assignmentMode !== AssignmentMode.TEAM) {
+        task.teamAssigneeIds = updates.assigneeId ? [updates.assigneeId] : [];
+      }
+    }
+    if (updates.teamAssigneeIds !== undefined) {
+      task.teamAssigneeIds = updates.teamAssigneeIds;
+      if (updates.teamAssigneeIds.length > 0 && !updates.assigneeId) {
+        task.assigneeId = updates.teamAssigneeIds[0];
+      }
+    }
     if (updates.priority !== undefined) task.priority = updates.priority;
     if (updates.status !== undefined) task.status = updates.status;
     if (updates.dueDate !== undefined) task.dueDate = updates.dueDate;
@@ -975,7 +1347,7 @@ class DatabaseEngine {
       this.createNotification({
         userId: updates.assigneeId,
         type: NotificationType.TASK_ASSIGNED,
-        message: `${actor.name} assigned you to "${task.title}"`,
+        message: `${actor.name} [${actor.uniqueCode}] assigned you to "${task.title}"`,
         link: `/projects/${project.id}?task=${task.id}`,
       });
     }

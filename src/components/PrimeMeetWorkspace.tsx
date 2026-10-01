@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { api, ApiError, getStoredToken } from '../client/api.ts';
 import {
+  AssignmentMode,
   EnrichedActivityLog,
   EnrichedProject,
   EnrichedTask,
@@ -44,7 +45,9 @@ import {
   Organization,
   OrganizationMember,
   Priority,
+  PROJECT_TYPE_LABELS,
   ProjectStatus,
+  ProjectType,
   TaskStatus,
   User,
   UserRole,
@@ -147,6 +150,13 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
     project?: EnrichedProject;
   } | null>(null);
   const [projFormName, setProjFormName] = useState('');
+  const [projFormType, setProjFormType] = useState<ProjectType>(
+    ProjectType.WEB_DEVELOPMENT
+  );
+  const [projFormManagerId, setProjFormManagerId] = useState('');
+  const [projFormShowAllManagers, setProjFormShowAllManagers] = useState(false);
+  const [projFormAssignmentMode, setProjFormAssignmentMode] =
+    useState<AssignmentMode>(AssignmentMode.TEAM);
   const [projFormDesc, setProjFormDesc] = useState('');
   const [projFormStatus, setProjFormStatus] = useState<ProjectStatus>(
     ProjectStatus.ACTIVE
@@ -160,7 +170,12 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
   const [taskFormProjectId, setTaskFormProjectId] = useState('');
   const [taskFormTitle, setTaskFormTitle] = useState('');
   const [taskFormDesc, setTaskFormDesc] = useState('');
+  const [taskFormAssignmentMode, setTaskFormAssignmentMode] =
+    useState<AssignmentMode>(AssignmentMode.INDIVIDUAL);
   const [taskFormAssigneeId, setTaskFormAssigneeId] = useState('');
+  const [taskFormTeamAssigneeIds, setTaskFormTeamAssigneeIds] = useState<
+    string[]
+  >([]);
   const [taskFormPriority, setTaskFormPriority] = useState<Priority>(
     Priority.MEDIUM
   );
@@ -178,9 +193,10 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
   // Add Member to Project state
   const [memberToAddId, setMemberToAddId] = useState('');
 
-  // Profile Settings State
+  // Profile Settings & Navbar Profile Menu State
   const [profileName, setProfileName] = useState(user.name);
   const [profileAvatar, setProfileAvatar] = useState(user.avatar);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   // Confirmation Dialog
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -405,7 +421,27 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
 
   // Open Project Modal
   const openCreateProjectModal = () => {
+    const defaultType =
+      user.role === UserRole.PROJECT_MANAGER && user.specialization
+        ? user.specialization
+        : ProjectType.WEB_DEVELOPMENT;
+    const matchingManagers = users.filter(
+      (u) =>
+        (u.role === UserRole.PROJECT_MANAGER || u.role === UserRole.SUPER_ADMIN) &&
+        u.specialization === defaultType
+    );
+    const defaultMgrId =
+      user.role === UserRole.PROJECT_MANAGER
+        ? user.id
+        : matchingManagers[0]?.id ||
+          users.find((u) => u.role === UserRole.PROJECT_MANAGER)?.id ||
+          user.id;
+
     setProjFormName('');
+    setProjFormType(defaultType);
+    setProjFormManagerId(defaultMgrId);
+    setProjFormShowAllManagers(false);
+    setProjFormAssignmentMode(AssignmentMode.TEAM);
     setProjFormDesc('');
     setProjFormStatus(ProjectStatus.ACTIVE);
     setProjFormPriority(Priority.HIGH);
@@ -418,6 +454,10 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
 
   const openEditProjectModal = (proj: EnrichedProject) => {
     setProjFormName(proj.name);
+    setProjFormType(proj.projectType || ProjectType.WEB_DEVELOPMENT);
+    setProjFormManagerId(proj.managerId);
+    setProjFormShowAllManagers(false);
+    setProjFormAssignmentMode(proj.assignmentMode || AssignmentMode.TEAM);
     setProjFormDesc(proj.description);
     setProjFormStatus(proj.status);
     setProjFormPriority(proj.priority);
@@ -432,6 +472,9 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
       if (projectModal.mode === 'create') {
         const res = await api.createProject({
           name: projFormName,
+          projectType: projFormType,
+          managerId: projFormManagerId || undefined,
+          assignmentMode: projFormAssignmentMode,
           description: projFormDesc,
           status: projFormStatus,
           priority: projFormPriority,
@@ -439,14 +482,17 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
         });
         addToast({
           type: 'success',
-          title: 'Project Created',
-          message: `"${res.project.name}" added to PrimeMeet Labs.`,
+          title: 'Project Created & Assigned',
+          message: `"${res.project.name}" (${PROJECT_TYPE_LABELS[res.project.projectType]}) assigned to ${res.project.manager?.name || 'Manager'}.`,
         });
         setSelectedProjectId(res.project.id);
         setSection('project-detail');
       } else if (projectModal.project) {
         const res = await api.updateProject(projectModal.project.id, {
           name: projFormName,
+          projectType: projFormType,
+          managerId: projFormManagerId || undefined,
+          assignmentMode: projFormAssignmentMode,
           description: projFormDesc,
           status: projFormStatus,
           priority: projFormPriority,
@@ -472,15 +518,64 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
     }
   };
 
-  const handleOpenCreateTaskModal = (defaultStatus = TaskStatus.TODO) => {
-    setTaskFormProjectId(
-      selectedProjectId || allProjects[0]?.id || 'prj_website_redesign'
+  const creatableProjects =
+    user.role === UserRole.SUPER_ADMIN
+      ? allProjects
+      : user.role === UserRole.PROJECT_MANAGER
+      ? allProjects.filter((p) => p.managerId === user.id)
+      : allProjects;
+
+  const handleOpenCreateTaskModal = (
+    defaultStatusOrPreset?:
+      | TaskStatus
+      | {
+          projectId?: string;
+          assignmentMode?: AssignmentMode;
+          assigneeId?: string;
+          teamAssigneeIds?: string[];
+        }
+  ) => {
+    const isStatus = typeof defaultStatusOrPreset === 'string';
+    const preset = !isStatus && defaultStatusOrPreset ? defaultStatusOrPreset : {};
+    const validSelectedProjectId =
+      selectedProjectId && creatableProjects.some((p) => p.id === selectedProjectId)
+        ? selectedProjectId
+        : undefined;
+    const targetPid =
+      preset.projectId ||
+      validSelectedProjectId ||
+      creatableProjects[0]?.id ||
+      allProjects[0]?.id ||
+      'prj_website_redesign';
+    const targetProject = allProjects.find((p) => p.id === targetPid);
+    const managerDirectReports = users.filter(
+      (u) =>
+        u.role === UserRole.TEAM_MEMBER &&
+        u.managerId === (targetProject?.managerId || user.id)
     );
+    const defaultTeamIds =
+      preset.teamAssigneeIds && preset.teamAssigneeIds.length > 0
+        ? preset.teamAssigneeIds
+        : managerDirectReports.length > 0
+        ? managerDirectReports.map((m) => m.id)
+        : targetProject?.members
+            .filter((m) => m.user.role === UserRole.TEAM_MEMBER)
+            .map((m) => m.userId) || [user.id];
+
+    setTaskFormProjectId(targetPid);
     setTaskFormTitle('');
     setTaskFormDesc('');
-    setTaskFormAssigneeId(user.id);
+    setTaskFormAssignmentMode(
+      preset.assignmentMode || AssignmentMode.INDIVIDUAL
+    );
+    setTaskFormAssigneeId(
+      preset.assigneeId ||
+        managerDirectReports[0]?.id ||
+        user.id
+    );
+    setTaskFormTeamAssigneeIds(defaultTeamIds);
     setTaskFormPriority(Priority.HIGH);
-    setTaskFormStatus(defaultStatus);
+    setTaskFormStatus(isStatus ? defaultStatusOrPreset : TaskStatus.TODO);
     setTaskFormDueDate(
       new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10)
     );
@@ -495,11 +590,25 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
+      const isTeam = taskFormAssignmentMode === AssignmentMode.TEAM;
+      const effectiveTeamIds = isTeam
+        ? taskFormTeamAssigneeIds.length > 0
+          ? taskFormTeamAssigneeIds
+          : taskFormAssigneeId
+          ? [taskFormAssigneeId]
+          : []
+        : taskFormAssigneeId
+        ? [taskFormAssigneeId]
+        : [];
       const res = await api.createTask({
         projectId: taskFormProjectId,
         title: taskFormTitle,
         description: taskFormDesc,
-        assigneeId: taskFormAssigneeId || null,
+        assignmentMode: taskFormAssignmentMode,
+        assigneeId: isTeam
+          ? effectiveTeamIds[0] || null
+          : taskFormAssigneeId || null,
+        teamAssigneeIds: effectiveTeamIds,
         priority: taskFormPriority,
         status: taskFormStatus,
         dueDate: new Date(taskFormDueDate).toISOString(),
@@ -508,8 +617,11 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
       setTaskModalOpen(false);
       addToast({
         type: 'success',
-        title: 'Task Created',
-        message: `"${res.task.title}" added to board.`,
+        title:
+          taskFormAssignmentMode === AssignmentMode.TEAM
+            ? 'Team Work Assigned'
+            : 'Individual Task Assigned',
+        message: `"${res.task.title}" assigned (${res.task.assignmentMode}).`,
       });
       await fetchWorkspaceData(true);
     } catch (err) {
@@ -653,7 +765,7 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
             <form onSubmit={handleSaveProject} className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Project Name
+                  1. Project Name
                 </label>
                 <input
                   type="text"
@@ -664,9 +776,85 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                   className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                 />
               </div>
+
+              {/* Project Type Option BEFORE Description */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-900/60">
+                <div>
+                  <label className="block text-xs font-bold text-[#6366F1] dark:text-indigo-400 mb-1">
+                    2. Project Type (Before Description)
+                  </label>
+                  <select
+                    value={projFormType}
+                    onChange={(e) => {
+                      const nextType = e.target.value as ProjectType;
+                      setProjFormType(nextType);
+                      const matchingMgr = users.find(
+                        (u) =>
+                          u.role === UserRole.PROJECT_MANAGER &&
+                          u.specialization === nextType
+                      );
+                      if (matchingMgr) {
+                        setProjFormManagerId(matchingMgr.id);
+                      }
+                    }}
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-800"
+                  >
+                    {Object.entries(PROJECT_TYPE_LABELS).map(([val, label]) => (
+                      <option key={val} value={val}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-[#6366F1] dark:text-indigo-400">
+                      3. Assign Project Manager
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setProjFormShowAllManagers((v) => !v)}
+                      className="text-[10px] font-semibold text-slate-500 hover:text-[#6366F1] underline cursor-pointer"
+                    >
+                      {projFormShowAllManagers ? 'Filter by Type' : 'Show All'}
+                    </button>
+                  </div>
+                  <select
+                    value={projFormManagerId}
+                    onChange={(e) => setProjFormManagerId(e.target.value)}
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-slate-800"
+                  >
+                    {users
+                      .filter(
+                        (u) =>
+                          u.role === UserRole.PROJECT_MANAGER ||
+                          u.role === UserRole.SUPER_ADMIN
+                      )
+                      .filter((u) =>
+                        projFormShowAllManagers
+                          ? true
+                          : u.specialization === projFormType ||
+                            u.id === projFormManagerId
+                      )
+                      .map((mgr) => (
+                        <option key={mgr.id} value={mgr.id}>
+                          [{mgr.uniqueCode}] {mgr.name} —{' '}
+                          {mgr.specialization
+                            ? PROJECT_TYPE_LABELS[mgr.specialization].replace(
+                                ' Project',
+                                ' Manager'
+                              )
+                            : mgr.role}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Description
+                  4. Project Description
                 </label>
                 <textarea
                   rows={3}
@@ -677,7 +865,23 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                   className="w-full p-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                 />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Delivery Mode
+                  </label>
+                  <select
+                    value={projFormAssignmentMode}
+                    onChange={(e) =>
+                      setProjFormAssignmentMode(e.target.value as AssignmentMode)
+                    }
+                    className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                  >
+                    <option value={AssignmentMode.TEAM}>TEAM</option>
+                    <option value={AssignmentMode.INDIVIDUAL}>INDIVIDUAL</option>
+                  </select>
+                </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Status
@@ -739,7 +943,7 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                   className="px-4 py-2 rounded-xl btn-3d-primary text-xs font-semibold cursor-pointer"
                 >
                   {projectModal.mode === 'create'
-                    ? 'Create Project'
+                    ? 'Create & Assign Project'
                     : 'Save Changes'}
                 </button>
               </div>
@@ -775,9 +979,9 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                   onChange={(e) => setTaskFormProjectId(e.target.value)}
                   className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                 >
-                  {allProjects.map((p) => (
+                  {(creatableProjects.length > 0 ? creatableProjects : allProjects).map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name}
+                      {p.name} ({PROJECT_TYPE_LABELS[p.projectType || ProjectType.WEB_DEVELOPMENT]})
                     </option>
                   ))}
                 </select>
@@ -807,24 +1011,115 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                   className="w-full p-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Assignee
+              <div className="p-3.5 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-900/60 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-[#6366F1] dark:text-indigo-400">
+                    Assignment Mode (Individual or Team)
                   </label>
-                  <select
-                    value={taskFormAssigneeId}
-                    onChange={(e) => setTaskFormAssigneeId(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                  >
-                    <option value="">Unassigned</option>
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name} ({u.role})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setTaskFormAssignmentMode(AssignmentMode.INDIVIDUAL)
+                      }
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
+                        taskFormAssignmentMode === AssignmentMode.INDIVIDUAL
+                          ? 'bg-[#6366F1] text-white'
+                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      Individual Member
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTaskFormAssignmentMode(AssignmentMode.TEAM)}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer ${
+                        taskFormAssignmentMode === AssignmentMode.TEAM
+                          ? 'bg-[#6366F1] text-white'
+                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      Team Squad
+                    </button>
+                  </div>
                 </div>
+
+                {taskFormAssignmentMode === AssignmentMode.INDIVIDUAL ? (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Select Individual Member (with Unique ID)
+                    </label>
+                    <select
+                      value={taskFormAssigneeId}
+                      onChange={(e) => setTaskFormAssigneeId(e.target.value)}
+                      className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                    >
+                      <option value="">Unassigned</option>
+                      {users.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          [{u.uniqueCode}] {u.name} ({u.role})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
+                        Select Team Members ({taskFormTeamAssigneeIds.length} selected)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setTaskFormTeamAssigneeIds(
+                            users
+                              .filter((u) => u.role === UserRole.TEAM_MEMBER)
+                              .map((u) => u.id)
+                          )
+                        }
+                        className="text-[10px] font-bold text-[#6366F1] underline cursor-pointer"
+                      >
+                        Select All Team Members
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-36 overflow-y-auto p-1">
+                      {users
+                        .filter((u) => u.role === UserRole.TEAM_MEMBER)
+                        .map((m) => {
+                          const checked = taskFormTeamAssigneeIds.includes(m.id);
+                          return (
+                            <label
+                              key={m.id}
+                              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-xs cursor-pointer ${
+                                checked
+                                  ? 'bg-indigo-50 dark:bg-indigo-950/60 border-[#6366F1] font-semibold'
+                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() =>
+                                  setTaskFormTeamAssigneeIds((prev) =>
+                                    prev.includes(m.id)
+                                      ? prev.filter((id) => id !== m.id)
+                                      : [...prev, m.id]
+                                  )
+                                }
+                              />
+                              <span className="font-mono text-[10px] font-bold text-[#6366F1]">
+                                [{m.uniqueCode}]
+                              </span>
+                              <span className="truncate">{m.name}</span>
+                            </label>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Due Date
@@ -837,8 +1132,19 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                     className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
                   />
                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Labels
+                  </label>
+                  <input
+                    type="text"
+                    value={taskFormLabels}
+                    onChange={(e) => setTaskFormLabels(e.target.value)}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                  />
+                </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Status
@@ -872,17 +1178,6 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                     <option value={Priority.HIGH}>HIGH</option>
                     <option value={Priority.URGENT}>URGENT</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Labels
-                  </label>
-                  <input
-                    type="text"
-                    value={taskFormLabels}
-                    onChange={(e) => setTaskFormLabels(e.target.value)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                  />
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
@@ -1331,14 +1626,113 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
               )}
             </button>
 
-            <button
-              type="button"
-              onClick={() => handleOpenCreateTaskModal()}
-              className="px-3.5 py-2 rounded-xl btn-3d-primary text-xs font-semibold flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
-            >
-              <Plus className="w-4 h-4" />
-              <span>New Task</span>
-            </button>
+            {/* Navbar Profile Button & Popover (Replaces duplicate navbar New Project / New Task buttons) */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setProfileMenuOpen((v) => !v)}
+                aria-label="Open user profile"
+                className="px-2.5 py-1.5 rounded-2xl btn-3d-secondary flex items-center gap-2.5 cursor-pointer"
+              >
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  referrerPolicy="no-referrer"
+                  className="w-7 h-7 rounded-full bg-indigo-50 border border-slate-200 dark:border-slate-700 shrink-0"
+                />
+                <div className="hidden sm:block text-left leading-tight">
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>{user.name}</span>
+                    <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/10 text-[#6366F1] dark:text-indigo-300">
+                      {user.uniqueCode}
+                    </span>
+                  </div>
+                  <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
+                    {user.role.replace('_', ' ')}
+                  </div>
+                </div>
+              </button>
+
+              {profileMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setProfileMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-72 z-50 card-3d rounded-2xl p-4 space-y-3 shadow-2xl border border-slate-200/90 dark:border-slate-800">
+                    <div className="flex items-center gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800">
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        referrerPolicy="no-referrer"
+                        className="w-11 h-11 rounded-full bg-indigo-50 border border-slate-200 dark:border-slate-700 shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                          {user.name}
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                          {user.email}
+                        </div>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/10 text-[#6366F1] dark:text-indigo-300">
+                            ID: {user.uniqueCode}
+                          </span>
+                          <span className="font-mono text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 text-[#10B981]">
+                            {user.role}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-xs space-y-1.5 text-slate-600 dark:text-slate-300">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400">Specialization:</span>
+                        <span className="font-semibold text-slate-900 dark:text-white">
+                          {PROJECT_TYPE_LABELS[
+                            user.specialization || ProjectType.WEB_DEVELOPMENT
+                          ]}
+                        </span>
+                      </div>
+                      {user.managerId && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">Manager:</span>
+                          <span className="font-semibold text-slate-900 dark:text-white">
+                            {users.find((u) => u.id === user.managerId)?.name ||
+                              user.managerId}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800 flex flex-col gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          setSection('settings');
+                        }}
+                        className="w-full px-3 py-2 rounded-xl btn-3d-secondary text-xs font-semibold text-slate-800 dark:text-white flex items-center gap-2 cursor-pointer"
+                      >
+                        <Settings className="w-3.5 h-3.5 text-[#6366F1]" />
+                        <span>Profile &amp; Workspace Settings</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          onLogout();
+                        }}
+                        className="w-full px-3 py-2 rounded-xl btn-3d-secondary text-xs font-semibold text-[#EF4444] flex items-center gap-2 cursor-pointer"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </header>
 
@@ -1393,14 +1787,97 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                   onSelectTask={(t) => setSelectedTask(t)}
                   onQuickStatusChange={handleOptimisticTaskMove}
                   onOpenCreateProject={openCreateProjectModal}
-                  onOpenCreateTask={() => handleOpenCreateTaskModal()}
-                  onUpdateUserRole={async (uid, nextRole) => {
+                  onOpenCreateTask={(preset) => handleOpenCreateTaskModal(preset)}
+                  onUpdateUserRole={async (uid, updates) => {
                     try {
-                      await api.updateUser(uid, { role: nextRole });
+                      await api.updateUser(uid, updates);
                       addToast({
                         type: 'success',
-                        title: 'Role Updated',
-                        message: `User role updated to ${nextRole}.`,
+                        title: 'User Profile Updated',
+                        message: 'Updated user role, specialization, or reporting manager.',
+                      });
+                      await fetchWorkspaceData(true);
+                    } catch (err) {
+                      if (err instanceof ApiError) {
+                        addToast({
+                          type: 'error',
+                          title: 'You don\'t have permission',
+                          message: err.message,
+                          rule: err.rule,
+                        });
+                      }
+                    }
+                  }}
+                  onCreateProjectDirect={async (input) => {
+                    try {
+                      const res = await api.createProject({
+                        name: input.name,
+                        projectType: input.projectType,
+                        managerId: input.managerId,
+                        assignmentMode: input.assignmentMode,
+                        description: input.description,
+                        status: ProjectStatus.ACTIVE,
+                        priority: input.priority,
+                        dueDate: input.dueDate,
+                      });
+                      addToast({
+                        type: 'success',
+                        title: 'Project Created & Assigned',
+                        message: `"${res.project.name}" (${PROJECT_TYPE_LABELS[res.project.projectType]}) assigned to ${res.project.manager?.name || 'Manager'}.`,
+                      });
+                      await fetchWorkspaceData(true);
+                    } catch (err) {
+                      if (err instanceof ApiError) {
+                        addToast({
+                          type: 'error',
+                          title: 'You don\'t have permission',
+                          message: err.message,
+                          rule: err.rule,
+                        });
+                      }
+                    }
+                  }}
+                  onUpdateProjectDirect={async (projectId, updates) => {
+                    try {
+                      const res = await api.updateProject(projectId, updates);
+                      addToast({
+                        type: 'success',
+                        title: 'Project Assignment Updated',
+                        message: `Updated "${res.project.name}" assignment settings.`,
+                      });
+                      await fetchWorkspaceData(true);
+                    } catch (err) {
+                      if (err instanceof ApiError) {
+                        addToast({
+                          type: 'error',
+                          title: 'You don\'t have permission',
+                          message: err.message,
+                          rule: err.rule,
+                        });
+                      }
+                    }
+                  }}
+                  onCreateTaskDirect={async (input) => {
+                    try {
+                      const res = await api.createTask({
+                        projectId: input.projectId,
+                        title: input.title,
+                        description: input.description,
+                        assignmentMode: input.assignmentMode,
+                        assigneeId: input.assigneeId,
+                        teamAssigneeIds: input.teamAssigneeIds,
+                        priority: input.priority,
+                        status: TaskStatus.TODO,
+                        dueDate: input.dueDate,
+                        labels: input.labels,
+                      });
+                      addToast({
+                        type: 'success',
+                        title:
+                          input.assignmentMode === AssignmentMode.TEAM
+                            ? 'Team Work Assigned'
+                            : 'Individual Work Assigned',
+                        message: `"${res.task.title}" assigned by Project Manager.`,
                       });
                       await fetchWorkspaceData(true);
                     } catch (err) {
@@ -1435,14 +1912,24 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                         Row-level filtered projects across PrimeMeet Labs
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={openCreateProjectModal}
-                      className="px-4 py-2 rounded-xl btn-3d-primary text-xs font-semibold flex items-center gap-1.5 cursor-pointer self-start"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>New Project</span>
-                    </button>
+                    <div className="flex items-center gap-2 self-start">
+                      <button
+                        type="button"
+                        onClick={openCreateProjectModal}
+                        className="px-4 py-2 rounded-xl btn-3d-primary text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>New Project</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenCreateTaskModal()}
+                        className="px-4 py-2 rounded-xl btn-3d-secondary text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4 text-[#6366F1]" />
+                        <span>New Task</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Filter, Search & View Toggle Bar */}
@@ -1533,12 +2020,28 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                           className="card-3d card-3d-interactive rounded-2xl p-6 flex flex-col justify-between space-y-5"
                         >
                           <div className="space-y-2.5">
-                            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                              <span className="font-mono font-semibold text-[#6366F1] dark:text-indigo-400">
-                                {proj.status}
-                              </span>
-                              <span>·</span>
-                              <span className="font-mono">{proj.priority}</span>
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono font-semibold text-[#6366F1] dark:text-indigo-400">
+                                  {proj.status}
+                                </span>
+                                <span>·</span>
+                                <span className="font-mono">{proj.priority}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-[#6366F1] dark:text-indigo-300 text-[10px] font-bold">
+                                  {PROJECT_TYPE_LABELS[proj.projectType] || proj.projectType}
+                                </span>
+                                <span
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                                    proj.assignmentMode === AssignmentMode.TEAM
+                                      ? 'bg-violet-500/10 text-violet-700 dark:text-violet-300'
+                                      : 'bg-sky-500/10 text-sky-700 dark:text-sky-300'
+                                  }`}
+                                >
+                                  {proj.assignmentMode || 'TEAM'}
+                                </span>
+                              </div>
                             </div>
 
                             <h3
@@ -1554,6 +2057,18 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">
                               {proj.description}
                             </p>
+
+                            <div className="text-[11px] text-slate-500 flex items-center gap-1.5 pt-0.5">
+                              <span>Assigned Manager:</span>
+                              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                {proj.manager?.name || proj.managerId}
+                              </span>
+                              {proj.manager?.uniqueCode && (
+                                <span className="font-mono text-[10px] font-bold text-[#6366F1]">
+                                  [{proj.manager.uniqueCode}]
+                                </span>
+                              )}
+                            </div>
                           </div>
 
                           <div className="space-y-4 pt-4 border-t border-slate-200/70 dark:border-slate-800">
@@ -1757,9 +2272,26 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                   <div className="card-3d rounded-2xl p-6 space-y-5">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="space-y-1.5">
-                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                           <span className="font-mono font-bold text-[#6366F1]">
                             {currentProject.status}
+                          </span>
+                          <span>·</span>
+                          <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-[#6366F1] dark:text-indigo-300 font-bold text-[11px]">
+                            {PROJECT_TYPE_LABELS[currentProject.projectType] ||
+                              currentProject.projectType}
+                          </span>
+                          <span>·</span>
+                          <span
+                            className={`px-2 py-0.5 rounded-md font-bold text-[11px] ${
+                              currentProject.assignmentMode === AssignmentMode.TEAM
+                                ? 'bg-violet-500/10 text-violet-700 dark:text-violet-300'
+                                : 'bg-sky-500/10 text-sky-700 dark:text-sky-300'
+                            }`}
+                          >
+                            {currentProject.assignmentMode === AssignmentMode.TEAM
+                              ? 'TEAM MODE'
+                              : 'INDIVIDUAL MODE'}
                           </span>
                           <span>·</span>
                           <span className="font-mono">
@@ -2296,35 +2828,62 @@ export const PrimeMeetWorkspace: React.FC<PrimeMeetWorkspaceProps> = ({
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
                         <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-[11px] font-semibold text-slate-500">
+                          <th className="py-3.5 px-4">Unique ID</th>
                           <th className="py-3.5 px-4">Member</th>
-                          <th className="py-3.5 px-4">Email</th>
-                          <th className="py-3.5 px-4">Role</th>
+                          <th className="py-3.5 px-4">Specialization</th>
+                          <th className="py-3.5 px-4">Role &amp; Manager</th>
                           <th className="py-3.5 px-4 text-right">Assigned Tasks</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200/60 dark:divide-slate-800 tabular-nums">
-                        {users.map((u) => (
-                          <tr key={u.id}>
-                            <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-white flex items-center gap-2.5">
-                              <img
-                                src={u.avatar}
-                                alt={u.name}
-                                referrerPolicy="no-referrer"
-                                className="w-7 h-7 rounded-full bg-slate-100"
-                              />
-                              <span>{u.name}</span>
-                            </td>
-                            <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">
-                              {u.email}
-                            </td>
-                            <td className="py-3.5 px-4 font-mono text-[#6366F1]">
-                              {u.role}
-                            </td>
-                            <td className="py-3.5 px-4 text-right font-mono font-bold">
-                              {tasks.filter((t) => t.assigneeId === u.id).length}
-                            </td>
-                          </tr>
-                        ))}
+                        {users.map((u) => {
+                          const mgr = users.find((m) => m.id === u.managerId);
+                          return (
+                            <tr key={u.id}>
+                              <td className="py-3.5 px-4 font-mono font-bold text-[#6366F1]">
+                                [{u.uniqueCode}]
+                              </td>
+                              <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-white flex items-center gap-2.5">
+                                <img
+                                  src={u.avatar}
+                                  alt={u.name}
+                                  referrerPolicy="no-referrer"
+                                  className="w-7 h-7 rounded-full bg-slate-100"
+                                />
+                                <div>
+                                  <div>{u.name}</div>
+                                  <div className="text-[11px] font-normal text-slate-400">
+                                    {u.email}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
+                                {u.specialization
+                                  ? PROJECT_TYPE_LABELS[u.specialization]
+                                  : 'General'}
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <div className="font-mono text-[#6366F1] font-semibold">
+                                  {u.role}
+                                </div>
+                                {mgr && (
+                                  <div className="text-[11px] text-slate-400">
+                                    Reports to: {mgr.name} [{mgr.uniqueCode}]
+                                  </div>
+                                )}
+                              </td>
+                              <td className="py-3.5 px-4 text-right font-mono font-bold">
+                                {
+                                  tasks.filter(
+                                    (t) =>
+                                      t.assigneeId === u.id ||
+                                      (t.teamAssigneeIds || []).includes(u.id)
+                                  ).length
+                                }
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

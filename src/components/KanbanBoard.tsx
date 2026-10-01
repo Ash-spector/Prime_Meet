@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import {
+  AssignmentMode,
   EnrichedTask,
   Priority,
   TaskStatus,
@@ -232,7 +233,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
             <option value="UNASSIGNED">Unassigned</option>
             {users.map((u) => (
               <option key={u.id} value={u.id}>
-                {u.name}
+                {u.name} [{u.uniqueCode}]
               </option>
             ))}
           </select>
@@ -368,6 +369,17 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
                                 </>
                               )}
                             </div>
+                            <span
+                              className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                                task.assignmentMode === AssignmentMode.TEAM
+                                  ? 'bg-emerald-500/10 text-[#10B981]'
+                                  : 'bg-indigo-500/10 text-[#6366F1] dark:text-indigo-400'
+                              }`}
+                            >
+                              {task.assignmentMode === AssignmentMode.TEAM
+                                ? `TEAM (${task.teamAssignees?.length || 1})`
+                                : task.assignee?.uniqueCode || 'INDIVIDUAL'}
+                            </span>
                           </div>
 
                           {/* Task Title */}

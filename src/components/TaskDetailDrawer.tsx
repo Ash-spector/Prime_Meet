@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { api, ApiError } from '../client/api.ts';
 import {
+  AssignmentMode,
   EnrichedActivityLog,
   EnrichedAttachment,
   EnrichedComment,
@@ -131,6 +132,8 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
       status: TaskStatus;
       priority: Priority;
       assigneeId: string | null;
+      assignmentMode: AssignmentMode;
+      teamAssigneeIds: string[];
       dueDate: string;
       labels: string[];
     }>
@@ -377,10 +380,21 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
         {/* Drawer Header */}
         <div className="p-6 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-4 bg-slate-50/70 dark:bg-slate-900">
           <div className="min-w-0">
-            <div className="text-xs font-medium text-[#6366F1] dark:text-indigo-400 flex items-center gap-2">
+            <div className="text-xs font-medium text-[#6366F1] dark:text-indigo-400 flex flex-wrap items-center gap-2">
               <span>{task.projectName || 'Project Task'}</span>
               <span>·</span>
               <span className="font-mono">{task.id}</span>
+              <span
+                className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
+                  task.assignmentMode === AssignmentMode.TEAM
+                    ? 'bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-500/20'
+                    : 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20'
+                }`}
+              >
+                {task.assignmentMode === AssignmentMode.TEAM
+                  ? `TEAM ASSIGNED (${task.teamAssignees?.length || 1})`
+                  : 'INDIVIDUAL ASSIGNED'}
+              </span>
             </div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-white truncate mt-0.5">
               {task.title}
@@ -569,6 +583,7 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                     <option value="">Unassigned</option>
                     {users.map((u) => (
                       <option key={u.id} value={u.id}>
+                        {u.uniqueCode ? `[${u.uniqueCode}] ` : ''}
                         {u.name}
                       </option>
                     ))}
@@ -586,6 +601,86 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                 </div>
               </div>
 
+              {/* Assignment Mode & Team Members Section */}
+              <div className="card-3d rounded-xl p-3.5 space-y-2.5 bg-slate-50/60 dark:bg-slate-800/40">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                    <span>Assignment Mode:</span>
+                    <span
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                        task.assignmentMode === AssignmentMode.TEAM
+                          ? 'bg-violet-500/15 text-violet-700 dark:text-violet-300'
+                          : 'bg-sky-500/15 text-sky-700 dark:text-sky-300'
+                      }`}
+                    >
+                      {task.assignmentMode === AssignmentMode.TEAM
+                        ? 'TEAM WORK'
+                        : 'INDIVIDUAL WORK'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleFieldUpdate({
+                          assignmentMode: AssignmentMode.INDIVIDUAL,
+                          teamAssigneeIds: task.assigneeId ? [task.assigneeId] : [],
+                        })
+                      }
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer ${
+                        task.assignmentMode !== AssignmentMode.TEAM
+                          ? 'bg-[#6366F1] text-white'
+                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      Individual
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleFieldUpdate({
+                          assignmentMode: AssignmentMode.TEAM,
+                        })
+                      }
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer ${
+                        task.assignmentMode === AssignmentMode.TEAM
+                          ? 'bg-[#6366F1] text-white'
+                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      Team
+                    </button>
+                  </div>
+                </div>
+
+                {task.assignmentMode === AssignmentMode.TEAM &&
+                  task.teamAssignees &&
+                  task.teamAssignees.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-[11px] text-slate-500">Team Members:</span>
+                      {task.teamAssignees.map((tm) => (
+                        <span
+                          key={tm.id}
+                          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-slate-700 dark:text-slate-200"
+                        >
+                          <img
+                            src={tm.avatar}
+                            alt={tm.name}
+                            referrerPolicy="no-referrer"
+                            className="w-4 h-4 rounded-full"
+                          />
+                          <span>{tm.name}</span>
+                          {tm.uniqueCode && (
+                            <span className="font-mono text-[10px] font-bold text-[#6366F1]">
+                              [{tm.uniqueCode}]
+                            </span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+              </div>
+
               {/* Metadata Footer: Labels & Created By */}
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200/70 dark:border-slate-800">
                 <div className="flex items-center gap-2">
@@ -597,7 +692,8 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                 <div className="flex items-center gap-2 tabular-nums">
                   <UserIcon className="w-3.5 h-3.5" />
                   <span>
-                    Created by {task.createdBy?.name || task.createdById} on{' '}
+                    Assigned by {task.createdBy?.name || task.createdById}
+                    {task.createdBy?.uniqueCode ? ` [${task.createdBy.uniqueCode}]` : ''} on{' '}
                     {new Date(task.createdAt).toLocaleDateString()}
                   </span>
                 </div>

@@ -1,45 +1,78 @@
-export enum UserRole {
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  PROJECT_MANAGER = 'PROJECT_MANAGER',
-  TEAM_MEMBER = 'TEAM_MEMBER',
-}
+export const UserRole = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  PROJECT_MANAGER: 'PROJECT_MANAGER',
+  TEAM_MEMBER: 'TEAM_MEMBER',
+} as const;
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
-export enum ProjectStatus {
-  PLANNING = 'PLANNING',
-  ACTIVE = 'ACTIVE',
-  ON_HOLD = 'ON_HOLD',
-  COMPLETED = 'COMPLETED',
-  ARCHIVED = 'ARCHIVED',
-}
+export const ProjectType = {
+  WEB_DEVELOPMENT: 'WEB_DEVELOPMENT',
+  MOBILE_DEVELOPMENT: 'MOBILE_DEVELOPMENT',
+  AI_DATA_SCIENCE: 'AI_DATA_SCIENCE',
+  CLOUD_DEVOPS: 'CLOUD_DEVOPS',
+  UI_UX_DESIGN: 'UI_UX_DESIGN',
+  CYBERSECURITY: 'CYBERSECURITY',
+} as const;
+export type ProjectType = (typeof ProjectType)[keyof typeof ProjectType];
 
-export enum Priority {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  URGENT = 'URGENT',
-}
+export const PROJECT_TYPE_LABELS: Record<ProjectType, string> = {
+  WEB_DEVELOPMENT: 'Web Development',
+  MOBILE_DEVELOPMENT: 'Mobile App Development',
+  AI_DATA_SCIENCE: 'AI & Data Science',
+  CLOUD_DEVOPS: 'Cloud & DevOps',
+  UI_UX_DESIGN: 'UI/UX & Product Design',
+  CYBERSECURITY: 'Security & Compliance',
+};
 
-export enum TaskStatus {
-  TODO = 'TODO',
-  IN_PROGRESS = 'IN_PROGRESS',
-  IN_REVIEW = 'IN_REVIEW',
-  DONE = 'DONE',
-}
+export const AssignmentMode = {
+  INDIVIDUAL: 'INDIVIDUAL',
+  TEAM: 'TEAM',
+} as const;
+export type AssignmentMode = (typeof AssignmentMode)[keyof typeof AssignmentMode];
 
-export enum NotificationType {
-  TASK_ASSIGNED = 'TASK_ASSIGNED',
-  STATUS_CHANGED = 'STATUS_CHANGED',
-  NEW_COMMENT = 'NEW_COMMENT',
-  REMOVED_FROM_PROJECT = 'REMOVED_FROM_PROJECT',
-  DEADLINE_APPROACHING = 'DEADLINE_APPROACHING',
-}
+export const ProjectStatus = {
+  PLANNING: 'PLANNING',
+  ACTIVE: 'ACTIVE',
+  ON_HOLD: 'ON_HOLD',
+  COMPLETED: 'COMPLETED',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+export type ProjectStatus = (typeof ProjectStatus)[keyof typeof ProjectStatus];
+
+export const Priority = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT',
+} as const;
+export type Priority = (typeof Priority)[keyof typeof Priority];
+
+export const TaskStatus = {
+  TODO: 'TODO',
+  IN_PROGRESS: 'IN_PROGRESS',
+  IN_REVIEW: 'IN_REVIEW',
+  DONE: 'DONE',
+} as const;
+export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
+
+export const NotificationType = {
+  TASK_ASSIGNED: 'TASK_ASSIGNED',
+  STATUS_CHANGED: 'STATUS_CHANGED',
+  NEW_COMMENT: 'NEW_COMMENT',
+  REMOVED_FROM_PROJECT: 'REMOVED_FROM_PROJECT',
+  DEADLINE_APPROACHING: 'DEADLINE_APPROACHING',
+} as const;
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
 
 export interface User {
   id: string;
+  uniqueCode: string;
   name: string;
   email: string;
   avatar: string;
   role: UserRole;
+  specialization: ProjectType;
+  managerId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -65,12 +98,14 @@ export interface Project {
   id: string;
   organizationId: string;
   name: string;
+  projectType: ProjectType;
   description: string;
   status: ProjectStatus;
   priority: Priority;
   startDate: string;
   dueDate: string;
   managerId: string;
+  assignmentMode: AssignmentMode;
   createdAt: string;
   updatedAt: string;
 }
@@ -89,6 +124,8 @@ export interface Task {
   title: string;
   description: string;
   assigneeId: string | null;
+  assignmentMode?: AssignmentMode;
+  teamAssigneeIds?: string[];
   createdById: string;
   priority: Priority;
   status: TaskStatus;
@@ -156,7 +193,10 @@ export interface EnrichedProject extends Project {
 
 export interface EnrichedTask extends Task {
   projectName?: string;
+  projectType?: ProjectType;
+  projectManager?: User;
   assignee?: User | null;
+  teamAssignees?: User[];
   createdBy?: User;
   commentCount: number;
   attachmentCount: number;

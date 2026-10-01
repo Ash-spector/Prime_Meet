@@ -1,0 +1,1214 @@
+{
+  "users": [
+    {
+      "id": "usr_admin_alex",
+      "name": "Alex Rivera",
+      "email": "alex.rivera@primemeet.io",
+      "avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=AlexRivera&backgroundColor=e0e7ff",
+      "role": "SUPER_ADMIN",
+      "passwordHash": "d7f280948fe2020d8017cfb2f26aa9334ebafde4222214da93ce4a85ac8c3f7f43181e73edfdec840cad12ce26a47311309694a7e13211ed57a907d045692ab1",
+      "passwordSalt": "121705d95dc5282593d3878b3c144b4b",
+      "createdAt": "2026-08-02T04:50:08.677Z",
+      "updatedAt": "2026-09-26T04:50:08.677Z",
+      "uniqueCode": "ADM-001",
+      "specialization": "CLOUD_DEVOPS",
+      "managerId": null
+    },
+    {
+      "id": "usr_mgr_sarah",
+      "name": "Sarah Chen",
+      "email": "sarah.chen@primemeet.io",
+      "avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=SarahChen&backgroundColor=d1fae5",
+      "role": "PROJECT_MANAGER",
+      "passwordHash": "d7f280948fe2020d8017cfb2f26aa9334ebafde4222214da93ce4a85ac8c3f7f43181e73edfdec840cad12ce26a47311309694a7e13211ed57a907d045692ab1",
+      "passwordSalt": "121705d95dc5282593d3878b3c144b4b",
+      "createdAt": "2026-08-07T04:50:08.677Z",
+      "updatedAt": "2026-09-28T04:50:08.677Z",
+      "uniqueCode": "PM-WEB-101",
+      "specialization": "WEB_DEVELOPMENT",
+      "managerId": "usr_admin_alex"
+    },
+    {
+      "id": "usr_mem_david",
+      "name": "David Kim",
+      "email": "david.kim@primemeet.io",
+      "avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=DavidKim&backgroundColor=fef3c7",
+      "role": "TEAM_MEMBER",
+      "passwordHash": "d7f280948fe2020d8017cfb2f26aa9334ebafde4222214da93ce4a85ac8c3f7f43181e73edfdec840cad12ce26a47311309694a7e13211ed57a907d045692ab1",
+      "passwordSalt": "121705d95dc5282593d3878b3c144b4b",
+      "createdAt": "2026-08-14T04:50:08.677Z",
+      "updatedAt": "2026-09-30T04:50:08.677Z",
+      "uniqueCode": "MEM-WEB-201",
+      "specialization": "WEB_DEVELOPMENT",
+      "managerId": "usr_mgr_sarah"
+    },
+    {
+      "id": "usr_mem_elena",
+      "name": "Elena Rostova",
+      "email": "elena.rostova@primemeet.io",
+      "avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=ElenaRostova&backgroundColor=fce7f3",
+      "role": "TEAM_MEMBER",
+      "passwordHash": "d7f280948fe2020d8017cfb2f26aa9334ebafde4222214da93ce4a85ac8c3f7f43181e73edfdec840cad12ce26a47311309694a7e13211ed57a907d045692ab1",
+      "passwordSalt": "121705d95dc5282593d3878b3c144b4b",
+      "createdAt": "2026-08-20T04:50:08.677Z",
+      "updatedAt": "2026-09-29T04:50:08.677Z",
+      "uniqueCode": "MEM-WEB-202",
+      "specialization": "WEB_DEVELOPMENT",
+      "managerId": "usr_mgr_sarah"
+    },
+    {
+      "id": "usr_mgr_marcus",
+      "name": "Marcus Vance",
+      "email": "marcus.vance@primemeet.io",
+      "avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=MarcusVance&backgroundColor=e0f2fe",
+      "role": "PROJECT_MANAGER",
+      "passwordHash": "d7f280948fe2020d8017cfb2f26aa9334ebafde4222214da93ce4a85ac8c3f7f43181e73edfdec840cad12ce26a47311309694a7e13211ed57a907d045692ab1",
+      "passwordSalt": "121705d95dc5282593d3878b3c144b4b",
+      "createdAt": "2026-08-24T04:50:08.677Z",
+      "updatedAt": "2026-09-27T04:50:08.677Z",
+      "uniqueCode": "PM-AI-102",
+      "specialization": "AI_DATA_SCIENCE",
+      "managerId": "usr_admin_alex"
+    },
+    {
+      "id": "usr_mem_priya",
+      "name": "Priya Patel",
+      "email": "priya.patel@primemeet.io",
+      "avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=PriyaPatel&backgroundColor=ede9fe",
+      "role": "TEAM_MEMBER",
+      "passwordHash": "d7f280948fe2020d8017cfb2f26aa9334ebafde4222214da93ce4a85ac8c3f7f43181e73edfdec840cad12ce26a47311309694a7e13211ed57a907d045692ab1",
+      "passwordSalt": "121705d95dc5282593d3878b3c144b4b",
+      "createdAt": "2026-09-06T04:50:08.677Z",
+      "updatedAt": "2026-09-30T04:50:08.677Z",
+      "uniqueCode": "MEM-MOB-203",
+      "specialization": "MOBILE_DEVELOPMENT",
+      "managerId": "usr_mgr_sarah"
+    },
+    {
+      "id": "usr_mgr_vikram",
+      "uniqueCode": "PM-MOB-103",
+      "name": "Vikram Mehta",
+      "email": "vikram.mehta@primemeet.io",
+      "avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=VikramMehta&backgroundColor=ffedd5",
+      "role": "PROJECT_MANAGER",
+      "specialization": "MOBILE_DEVELOPMENT",
+      "managerId": "usr_admin_alex",
+      "passwordHash": "ffa9873d63cd56b6e8979e5f6d5a850faf09eaf7cc21205ac1cdbd8513921faa99152db3dec5a878f2a7d5c6e6022028d55b77c95974092264289da840b77bab",
+      "passwordSalt": "37802dfff0a2c8fb4d279487e59081f2",
+      "createdAt": "2026-08-28T07:45:56.473Z",
+      "updatedAt": "2026-09-28T07:45:56.473Z"
+    },
+    {
+      "id": "usr_mgr_claire",
+      "uniqueCode": "PM-DES-104",
+      "name": "Claire Dubois",
+      "email": "claire.dubois@primemeet.io",
+      "avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=ClaireDubois&backgroundColor=fae8ff",
+      "role": "PROJECT_MANAGER",
+      "specialization": "UI_UX_DESIGN",
+      "managerId": "usr_admin_alex",
+      "passwordHash": "ffa9873d63cd56b6e8979e5f6d5a850faf09eaf7cc21205ac1cdbd8513921faa99152db3dec5a878f2a7d5c6e6022028d55b77c95974092264289da840b77bab",
+      "passwordSalt": "37802dfff0a2c8fb4d279487e59081f2",
+      "createdAt": "2026-08-31T07:45:56.473Z",
+      "updatedAt": "2026-09-29T07:45:56.473Z"
+    },
+    {
+      "id": "usr_mem_liam",
+      "uniqueCode": "MEM-AI-204",
+      "name": "Liam O'Connor",
+      "email": "liam.oconnor@primemeet.io",
+      "avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=LiamOConnor&backgroundColor=dcfce7",
+      "role": "TEAM_MEMBER",
+      "specialization": "AI_DATA_SCIENCE",
+      "managerId": "usr_mgr_marcus",
+      "passwordHash": "ffa9873d63cd56b6e8979e5f6d5a850faf09eaf7cc21205ac1cdbd8513921faa99152db3dec5a878f2a7d5c6e6022028d55b77c95974092264289da840b77bab",
+      "passwordSalt": "37802dfff0a2c8fb4d279487e59081f2",
+      "createdAt": "2026-09-11T07:45:56.473Z",
+      "updatedAt": "2026-09-30T07:45:56.473Z"
+    }
+  ],
+  "organizations": [
+    {
+      "id": "org_primemeet_labs",
+      "name": "PrimeMeet Labs",
+      "slug": "primemeet-labs",
+      "description": "Core product engineering, design systems, and collaborative infrastructure for high-velocity teams.",
+      "createdAt": "2026-08-02T04:50:08.677Z",
+      "updatedAt": "2026-09-29T04:50:08.677Z"
+    }
+  ],
+  "organizationMembers": [
+    {
+      "id": "org_mem_1",
+      "organizationId": "org_primemeet_labs",
+      "userId": "usr_admin_alex",
+      "role": "SUPER_ADMIN",
+      "createdAt": "2026-08-02T04:50:08.677Z"
+    },
+    {
+      "id": "org_mem_2",
+      "organizationId": "org_primemeet_labs",
+      "userId": "usr_mgr_sarah",
+      "role": "PROJECT_MANAGER",
+      "createdAt": "2026-08-07T04:50:08.677Z"
+    },
+    {
+      "id": "org_mem_3",
+      "organizationId": "org_primemeet_labs",
+      "userId": "usr_mem_david",
+      "role": "TEAM_MEMBER",
+      "createdAt": "2026-08-14T04:50:08.677Z"
+    },
+    {
+      "id": "org_mem_4",
+      "organizationId": "org_primemeet_labs",
+      "userId": "usr_mem_elena",
+      "role": "TEAM_MEMBER",
+      "createdAt": "2026-08-20T04:50:08.677Z"
+    },
+    {
+      "id": "org_mem_5",
+      "organizationId": "org_primemeet_labs",
+      "userId": "usr_mgr_marcus",
+      "role": "PROJECT_MANAGER",
+      "createdAt": "2026-08-24T04:50:08.677Z"
+    },
+    {
+      "id": "org_mem_6",
+      "organizationId": "org_primemeet_labs",
+      "userId": "usr_mem_priya",
+      "role": "TEAM_MEMBER",
+      "createdAt": "2026-09-06T04:50:08.677Z"
+    },
+    {
+      "id": "org_mem_07476c4d",
+      "organizationId": "org_primemeet_labs",
+      "userId": "usr_mgr_vikram",
+      "role": "PROJECT_MANAGER",
+      "createdAt": "2026-08-28T07:45:56.473Z"
+    },
+    {
+      "id": "org_mem_afe5ee77",
+      "organizationId": "org_primemeet_labs",
+      "userId": "usr_mgr_claire",
+      "role": "PROJECT_MANAGER",
+      "createdAt": "2026-08-31T07:45:56.473Z"
+    },
+    {
+      "id": "org_mem_df29af0e",
+      "organizationId": "org_primemeet_labs",
+      "userId": "usr_mem_liam",
+      "role": "TEAM_MEMBER",
+      "createdAt": "2026-09-11T07:45:56.473Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "prj_54e48bddfbaa",
+      "organizationId": "org_primemeet_labs",
+      "name": "Shopify",
+      "description": "Ecomm website where user can purchase items like food, accessories",
+      "status": "ACTIVE",
+      "priority": "HIGH",
+      "startDate": "2026-10-01T06:57:44.021Z",
+      "dueDate": "2026-10-15T00:00:00.000Z",
+      "managerId": "usr_mgr_sarah",
+      "createdAt": "2026-10-01T06:57:44.021Z",
+      "updatedAt": "2026-10-01T06:57:44.021Z",
+      "projectType": "WEB_DEVELOPMENT",
+      "assignmentMode": "TEAM"
+    },
+    {
+      "id": "prj_website_redesign",
+      "organizationId": "org_primemeet_labs",
+      "name": "Website Redesign",
+      "description": "Complete architectural overhaul of the primemeet.io web experience, interactive command palette showcase, and documentation portal.",
+      "status": "ACTIVE",
+      "priority": "HIGH",
+      "startDate": "2026-09-01T04:50:08.677Z",
+      "dueDate": "2026-10-13T04:50:08.677Z",
+      "managerId": "usr_mgr_sarah",
+      "createdAt": "2026-09-01T04:50:08.677Z",
+      "updatedAt": "2026-10-01T06:55:06.672Z",
+      "projectType": "WEB_DEVELOPMENT",
+      "assignmentMode": "TEAM"
+    },
+    {
+      "id": "prj_mobile_app",
+      "organizationId": "org_primemeet_labs",
+      "name": "Mobile Application",
+      "description": "iOS and Android companion app featuring offline Kanban state synchronization, real-time notifications, and biometric sign-in.",
+      "status": "ACTIVE",
+      "priority": "URGENT",
+      "startDate": "2026-09-10T04:50:08.677Z",
+      "dueDate": "2026-10-03T04:50:08.677Z",
+      "managerId": "usr_mgr_sarah",
+      "createdAt": "2026-09-10T04:50:08.677Z",
+      "updatedAt": "2026-10-01T02:50:08.677Z",
+      "projectType": "MOBILE_DEVELOPMENT",
+      "assignmentMode": "TEAM"
+    },
+    {
+      "id": "prj_marketing_platform",
+      "organizationId": "org_primemeet_labs",
+      "name": "Marketing Platform",
+      "description": "Attribution telemetry pipeline, automated onboarding lifecycle sequences, and self-serve enterprise trial provisioning.",
+      "status": "PLANNING",
+      "priority": "MEDIUM",
+      "startDate": "2026-09-21T04:50:08.677Z",
+      "dueDate": "2026-10-25T04:50:08.677Z",
+      "managerId": "usr_mgr_marcus",
+      "createdAt": "2026-09-21T04:50:08.677Z",
+      "updatedAt": "2026-09-30T16:50:08.677Z",
+      "projectType": "AI_DATA_SCIENCE",
+      "assignmentMode": "INDIVIDUAL"
+    }
+  ],
+  "projectMembers": [
+    {
+      "id": "pm_1",
+      "projectId": "prj_website_redesign",
+      "userId": "usr_mgr_sarah",
+      "role": "MANAGER",
+      "createdAt": "2026-09-01T04:50:08.677Z"
+    },
+    {
+      "id": "pm_2",
+      "projectId": "prj_website_redesign",
+      "userId": "usr_mem_david",
+      "role": "MEMBER",
+      "createdAt": "2026-09-02T04:50:08.677Z"
+    },
+    {
+      "id": "pm_3",
+      "projectId": "prj_website_redesign",
+      "userId": "usr_mem_elena",
+      "role": "MEMBER",
+      "createdAt": "2026-09-02T04:50:08.677Z"
+    },
+    {
+      "id": "pm_4",
+      "projectId": "prj_website_redesign",
+      "userId": "usr_mem_priya",
+      "role": "MEMBER",
+      "createdAt": "2026-09-11T04:50:08.677Z"
+    },
+    {
+      "id": "pm_5",
+      "projectId": "prj_mobile_app",
+      "userId": "usr_mgr_sarah",
+      "role": "MANAGER",
+      "createdAt": "2026-09-10T04:50:08.677Z"
+    },
+    {
+      "id": "pm_6",
+      "projectId": "prj_mobile_app",
+      "userId": "usr_mem_david",
+      "role": "MEMBER",
+      "createdAt": "2026-09-11T04:50:08.677Z"
+    },
+    {
+      "id": "pm_7",
+      "projectId": "prj_mobile_app",
+      "userId": "usr_mem_priya",
+      "role": "MEMBER",
+      "createdAt": "2026-09-13T04:50:08.677Z"
+    },
+    {
+      "id": "pm_8",
+      "projectId": "prj_marketing_platform",
+      "userId": "usr_mgr_marcus",
+      "role": "MANAGER",
+      "createdAt": "2026-09-21T04:50:08.677Z"
+    },
+    {
+      "id": "pm_10",
+      "projectId": "prj_marketing_platform",
+      "userId": "usr_mem_elena",
+      "role": "MEMBER",
+      "createdAt": "2026-09-22T04:50:08.677Z"
+    },
+    {
+      "id": "pm_84ed78ebcbe6",
+      "projectId": "prj_54e48bddfbaa",
+      "userId": "usr_admin_alex",
+      "role": "MANAGER",
+      "createdAt": "2026-10-01T06:57:44.021Z"
+    },
+    {
+      "id": "pm_890ac415",
+      "projectId": "prj_54e48bddfbaa",
+      "userId": "usr_mgr_sarah",
+      "role": "MANAGER",
+      "createdAt": "2026-10-01T06:57:44.021Z"
+    },
+    {
+      "id": "pm_3cc12002",
+      "projectId": "prj_54e48bddfbaa",
+      "userId": "usr_mem_david",
+      "role": "MEMBER",
+      "createdAt": "2026-10-01T06:57:44.021Z"
+    },
+    {
+      "id": "pm_b3aee0a5",
+      "projectId": "prj_54e48bddfbaa",
+      "userId": "usr_mem_elena",
+      "role": "MEMBER",
+      "createdAt": "2026-10-01T06:57:44.021Z"
+    },
+    {
+      "id": "pm_054a33af",
+      "projectId": "prj_54e48bddfbaa",
+      "userId": "usr_mem_priya",
+      "role": "MEMBER",
+      "createdAt": "2026-10-01T06:57:44.021Z"
+    },
+    {
+      "id": "pm_11",
+      "projectId": "prj_marketing_platform",
+      "userId": "usr_mem_liam",
+      "role": "MEMBER",
+      "createdAt": "2026-10-01T09:03:52.269Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "tsk_01",
+      "projectId": "prj_website_redesign",
+      "title": "Design system token audit & dark mode contrast verification",
+      "description": "Verify WCAG AA contrast across all #0F172A dark surfaces and #F8FAFC light surfaces with tabular numeric scales.",
+      "assigneeId": "usr_mem_david",
+      "createdById": "usr_mgr_sarah",
+      "priority": "HIGH",
+      "status": "DONE",
+      "dueDate": "2026-09-25T04:50:08.677Z",
+      "labels": [
+        "Design System",
+        "Accessibility"
+      ],
+      "position": 0,
+      "createdAt": "2026-09-06T04:50:08.677Z",
+      "updatedAt": "2026-09-24T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_david"
+      ]
+    },
+    {
+      "id": "tsk_02",
+      "projectId": "prj_website_redesign",
+      "title": "Build interactive hero preview with role-based glass cards",
+      "description": "Implement layered dot-grid surface and interactive portal switcher for Admin, Manager, and Member personas.",
+      "assigneeId": "usr_mem_david",
+      "createdById": "usr_mgr_sarah",
+      "priority": "URGENT",
+      "status": "IN_PROGRESS",
+      "dueDate": "2026-10-01T04:50:08.677Z",
+      "labels": [
+        "Frontend",
+        "UI"
+      ],
+      "position": 0,
+      "createdAt": "2026-09-17T04:50:08.677Z",
+      "updatedAt": "2026-10-01T01:50:08.677Z",
+      "assignmentMode": "TEAM",
+      "teamAssigneeIds": [
+        "usr_mem_david",
+        "usr_mem_elena",
+        "usr_mem_priya"
+      ]
+    },
+    {
+      "id": "tsk_03",
+      "projectId": "prj_website_redesign",
+      "title": "Migrate documentation search index to sub-50ms query engine",
+      "description": "Index all API reference articles and keyboard shortcuts for instant command palette retrieval.",
+      "assigneeId": "usr_mem_elena",
+      "createdById": "usr_mgr_sarah",
+      "priority": "HIGH",
+      "status": "IN_REVIEW",
+      "dueDate": "2026-09-29T04:50:08.677Z",
+      "labels": [
+        "Search",
+        "Performance"
+      ],
+      "position": 0,
+      "createdAt": "2026-09-19T04:50:08.677Z",
+      "updatedAt": "2026-09-30T22:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_elena"
+      ]
+    },
+    {
+      "id": "tsk_04",
+      "projectId": "prj_website_redesign",
+      "title": "Optimize OpenGraph dynamic social card generation pipeline",
+      "description": "Generate custom OG preview cards for shared project roadmaps and public changelog releases.",
+      "assigneeId": "usr_mem_priya",
+      "createdById": "usr_mgr_sarah",
+      "priority": "MEDIUM",
+      "status": "TODO",
+      "dueDate": "2026-10-05T04:50:08.677Z",
+      "labels": [
+        "SEO",
+        "Edge"
+      ],
+      "position": 0,
+      "createdAt": "2026-09-21T04:50:08.677Z",
+      "updatedAt": "2026-09-26T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_priya"
+      ]
+    },
+    {
+      "id": "tsk_05",
+      "projectId": "prj_website_redesign",
+      "title": "Implement responsive drawer navigation for mobile viewports",
+      "description": "Replace desktop left sidebar with touch-friendly slide-over drawer and horizontal Kanban scroll snap.",
+      "assigneeId": "usr_mem_david",
+      "createdById": "usr_mgr_sarah",
+      "priority": "HIGH",
+      "status": "TODO",
+      "dueDate": "2026-09-30T04:50:08.677Z",
+      "labels": [
+        "Responsive",
+        "Frontend"
+      ],
+      "position": 1,
+      "createdAt": "2026-09-22T04:50:08.677Z",
+      "updatedAt": "2026-09-29T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_david"
+      ]
+    },
+    {
+      "id": "tsk_06",
+      "projectId": "prj_website_redesign",
+      "title": "Configure enterprise SSO documentation & security whitepaper page",
+      "description": "Detail row-level security enforcement, audit log retention, and RBAC permission boundaries.",
+      "assigneeId": "usr_mem_elena",
+      "createdById": "usr_mgr_sarah",
+      "priority": "LOW",
+      "status": "DONE",
+      "dueDate": "2026-09-27T04:50:08.677Z",
+      "labels": [
+        "Security",
+        "Docs"
+      ],
+      "position": 1,
+      "createdAt": "2026-09-13T04:50:08.677Z",
+      "updatedAt": "2026-09-27T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_elena"
+      ]
+    },
+    {
+      "id": "tsk_07",
+      "projectId": "prj_website_redesign",
+      "title": "Build pricing tier comparison calculator with seat slider",
+      "description": "Interactive seat estimator with annual/monthly toggle and clear feature matrix.",
+      "assigneeId": "usr_mem_priya",
+      "createdById": "usr_mgr_sarah",
+      "priority": "MEDIUM",
+      "status": "IN_PROGRESS",
+      "dueDate": "2026-10-04T04:50:08.677Z",
+      "labels": [
+        "Growth",
+        "Frontend"
+      ],
+      "position": 1,
+      "createdAt": "2026-09-23T04:50:08.677Z",
+      "updatedAt": "2026-09-30T18:50:08.677Z",
+      "assignmentMode": "TEAM",
+      "teamAssigneeIds": [
+        "usr_mem_priya",
+        "usr_mem_david"
+      ]
+    },
+    {
+      "id": "tsk_08",
+      "projectId": "prj_website_redesign",
+      "title": "Audit Core Web Vitals and eliminate layout shift on font load",
+      "description": "Preload Inter and JetBrains Mono font subsets and enforce strict aspect-ratio containers.",
+      "assigneeId": "usr_mem_david",
+      "createdById": "usr_mgr_sarah",
+      "priority": "MEDIUM",
+      "status": "IN_REVIEW",
+      "dueDate": "2026-10-03T04:50:08.677Z",
+      "labels": [
+        "Performance",
+        "Frontend"
+      ],
+      "position": 1,
+      "createdAt": "2026-09-24T04:50:08.677Z",
+      "updatedAt": "2026-09-30T23:50:08.677Z",
+      "assignmentMode": "TEAM",
+      "teamAssigneeIds": [
+        "usr_mem_david",
+        "usr_mem_elena"
+      ]
+    },
+    {
+      "id": "tsk_09",
+      "projectId": "prj_website_redesign",
+      "title": "Create interactive changelog timeline with filterable release tags",
+      "description": "Allow users to filter product updates by Kanban, API, Security, and Mobile categories.",
+      "assigneeId": "usr_mem_elena",
+      "createdById": "usr_mgr_sarah",
+      "priority": "LOW",
+      "status": "TODO",
+      "dueDate": "2026-10-10T04:50:08.677Z",
+      "labels": [
+        "Content",
+        "UI"
+      ],
+      "position": 2,
+      "createdAt": "2026-09-25T04:50:08.677Z",
+      "updatedAt": "2026-09-25T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_elena"
+      ]
+    },
+    {
+      "id": "tsk_10",
+      "projectId": "prj_website_redesign",
+      "title": "Final QA sign-off on cross-browser keyboard navigation shortcuts",
+      "description": "Verify Cmd+K palette, Escape modal dismissal, and focus ring visibility in Safari, Chrome, and Firefox.",
+      "assigneeId": "usr_mgr_sarah",
+      "createdById": "usr_mgr_sarah",
+      "priority": "HIGH",
+      "status": "DONE",
+      "dueDate": "2026-09-28T04:50:08.677Z",
+      "labels": [
+        "QA",
+        "Accessibility"
+      ],
+      "position": 2,
+      "createdAt": "2026-09-16T04:50:08.677Z",
+      "updatedAt": "2026-09-28T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mgr_sarah"
+      ]
+    },
+    {
+      "id": "tsk_11",
+      "projectId": "prj_mobile_app",
+      "title": "Implement optimistic drag-and-drop state engine with rollback",
+      "description": "Ensure Kanban card moves update immediately in UI and revert cleanly with an error toast if the server rejects the mutation.",
+      "assigneeId": "usr_mem_david",
+      "createdById": "usr_mgr_sarah",
+      "priority": "URGENT",
+      "status": "IN_PROGRESS",
+      "dueDate": "2026-10-02T04:50:08.677Z",
+      "labels": [
+        "Mobile",
+        "Sync"
+      ],
+      "position": 0,
+      "createdAt": "2026-09-17T04:50:08.677Z",
+      "updatedAt": "2026-10-01T03:50:08.677Z",
+      "assignmentMode": "TEAM",
+      "teamAssigneeIds": [
+        "usr_mem_david",
+        "usr_mem_priya"
+      ]
+    },
+    {
+      "id": "tsk_12",
+      "projectId": "prj_mobile_app",
+      "title": "WebSocket reconnection handler & live presence indicator",
+      "description": "Broadcast active project viewers and synchronize task moves and comments across connected clients in real time.",
+      "assigneeId": "usr_mem_david",
+      "createdById": "usr_mgr_sarah",
+      "priority": "HIGH",
+      "status": "TODO",
+      "dueDate": "2026-10-06T04:50:08.677Z",
+      "labels": [
+        "Realtime",
+        "WebSockets"
+      ],
+      "position": 0,
+      "createdAt": "2026-09-20T04:50:08.677Z",
+      "updatedAt": "2026-09-29T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_david"
+      ]
+    },
+    {
+      "id": "tsk_13",
+      "projectId": "prj_mobile_app",
+      "title": "Biometric session persistence and secure token refresh",
+      "description": "Persist authentication tokens safely across app restarts and purge local cache immediately on sign-out.",
+      "assigneeId": "usr_mem_priya",
+      "createdById": "usr_mgr_sarah",
+      "priority": "URGENT",
+      "status": "DONE",
+      "dueDate": "2026-09-26T04:50:08.677Z",
+      "labels": [
+        "Security",
+        "Auth"
+      ],
+      "position": 0,
+      "createdAt": "2026-09-12T04:50:08.677Z",
+      "updatedAt": "2026-09-26T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_priya"
+      ]
+    },
+    {
+      "id": "tsk_14",
+      "projectId": "prj_mobile_app",
+      "title": "Push notification dispatcher for approaching task deadlines",
+      "description": "Trigger in-app and push alerts when tasks enter the 72-hour due window or when comments are posted.",
+      "assigneeId": "usr_mem_priya",
+      "createdById": "usr_mgr_sarah",
+      "priority": "HIGH",
+      "status": "IN_PROGRESS",
+      "dueDate": "2026-09-28T04:50:08.677Z",
+      "labels": [
+        "Notifications",
+        "Backend"
+      ],
+      "position": 1,
+      "createdAt": "2026-09-18T04:50:08.677Z",
+      "updatedAt": "2026-09-30T20:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_priya"
+      ]
+    },
+    {
+      "id": "tsk_15",
+      "projectId": "prj_mobile_app",
+      "title": "Attachment uploader with 10MB validation and MIME allowlist",
+      "description": "Restrict uploads strictly to images, PDFs, and standard docs up to 10 MB with clear user-facing error states.",
+      "assigneeId": "usr_mem_david",
+      "createdById": "usr_mgr_sarah",
+      "priority": "MEDIUM",
+      "status": "IN_REVIEW",
+      "dueDate": "2026-10-01T04:50:08.677Z",
+      "labels": [
+        "Storage",
+        "Security"
+      ],
+      "position": 0,
+      "createdAt": "2026-09-21T04:50:08.677Z",
+      "updatedAt": "2026-10-01T00:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_david"
+      ]
+    },
+    {
+      "id": "tsk_16",
+      "projectId": "prj_mobile_app",
+      "title": "Offline SQLite queue for comments created in airplane mode",
+      "description": "Queue comment creations locally with idempotency keys and flush upon network restoration.",
+      "assigneeId": "usr_mem_priya",
+      "createdById": "usr_mgr_sarah",
+      "priority": "MEDIUM",
+      "status": "TODO",
+      "dueDate": "2026-10-07T04:50:08.677Z",
+      "labels": [
+        "Mobile",
+        "Offline"
+      ],
+      "position": 1,
+      "createdAt": "2026-09-23T04:50:08.677Z",
+      "updatedAt": "2026-09-27T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_priya"
+      ]
+    },
+    {
+      "id": "tsk_17",
+      "projectId": "prj_mobile_app",
+      "title": "Resolve iOS keyboard avoidance overlap in task detail drawer",
+      "description": "Ensure the comment input box remains visible above the virtual keyboard on compact viewports.",
+      "assigneeId": "usr_mem_david",
+      "createdById": "usr_mgr_sarah",
+      "priority": "LOW",
+      "status": "DONE",
+      "dueDate": "2026-09-23T04:50:08.677Z",
+      "labels": [
+        "Mobile",
+        "UI"
+      ],
+      "position": 1,
+      "createdAt": "2026-09-15T04:50:08.677Z",
+      "updatedAt": "2026-09-23T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_david"
+      ]
+    },
+    {
+      "id": "tsk_18",
+      "projectId": "prj_mobile_app",
+      "title": "Memory profiling for 500-card Kanban board virtualization",
+      "description": "Benchmark frame times during rapid horizontal column scrolling on mid-tier Android devices.",
+      "assigneeId": "usr_mgr_sarah",
+      "createdById": "usr_mgr_sarah",
+      "priority": "HIGH",
+      "status": "IN_REVIEW",
+      "dueDate": "2026-10-03T04:50:08.677Z",
+      "labels": [
+        "Performance",
+        "Mobile"
+      ],
+      "position": 1,
+      "createdAt": "2026-09-22T04:50:08.677Z",
+      "updatedAt": "2026-09-30T21:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mgr_sarah"
+      ]
+    },
+    {
+      "id": "tsk_19",
+      "projectId": "prj_mobile_app",
+      "title": "App Store & Google Play release candidate signing pipeline",
+      "description": "Automate build notarization and test track deployment via CI workflow.",
+      "assigneeId": "usr_mgr_sarah",
+      "createdById": "usr_mgr_sarah",
+      "priority": "URGENT",
+      "status": "TODO",
+      "dueDate": "2026-09-30T04:50:08.677Z",
+      "labels": [
+        "DevOps",
+        "Release"
+      ],
+      "position": 2,
+      "createdAt": "2026-09-24T04:50:08.677Z",
+      "updatedAt": "2026-09-30T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mgr_sarah"
+      ]
+    },
+    {
+      "id": "tsk_20",
+      "projectId": "prj_marketing_platform",
+      "title": "Architect multi-touch attribution schema for enterprise workspaces",
+      "description": "Track conversion cohorts from initial landing page visit through team workspace activation.",
+      "assigneeId": "usr_mgr_marcus",
+      "createdById": "usr_mgr_marcus",
+      "priority": "HIGH",
+      "status": "DONE",
+      "dueDate": "2026-09-27T04:50:08.677Z",
+      "labels": [
+        "Analytics",
+        "Data"
+      ],
+      "position": 0,
+      "createdAt": "2026-09-21T04:50:08.677Z",
+      "updatedAt": "2026-09-27T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mgr_marcus"
+      ]
+    },
+    {
+      "id": "tsk_21",
+      "projectId": "prj_marketing_platform",
+      "title": "Implement automated trial-to-paid lifecycle webhook handlers",
+      "description": "Sync organization billing tier updates with CRM and trigger onboarding specialist alerts.",
+      "assigneeId": "usr_mem_elena",
+      "createdById": "usr_mgr_marcus",
+      "priority": "HIGH",
+      "status": "IN_PROGRESS",
+      "dueDate": "2026-10-04T04:50:08.677Z",
+      "labels": [
+        "API",
+        "Backend"
+      ],
+      "position": 0,
+      "createdAt": "2026-09-23T04:50:08.677Z",
+      "updatedAt": "2026-09-30T23:50:08.677Z",
+      "assignmentMode": "TEAM",
+      "teamAssigneeIds": [
+        "usr_mem_elena",
+        "usr_mem_liam"
+      ]
+    },
+    {
+      "id": "tsk_22",
+      "projectId": "prj_marketing_platform",
+      "title": "Design executive ROI benchmark report template",
+      "description": "Generate downloadable PDF and interactive web views summarizing team velocity gains.",
+      "assigneeId": "usr_mem_elena",
+      "createdById": "usr_mgr_marcus",
+      "priority": "MEDIUM",
+      "status": "TODO",
+      "dueDate": "2026-10-09T04:50:08.677Z",
+      "labels": [
+        "Design",
+        "Growth"
+      ],
+      "position": 0,
+      "createdAt": "2026-09-25T04:50:08.677Z",
+      "updatedAt": "2026-09-28T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_elena"
+      ]
+    },
+    {
+      "id": "tsk_23",
+      "projectId": "prj_marketing_platform",
+      "title": "Audit GDPR & SOC2 consent banner telemetry compliance",
+      "description": "Ensure zero analytics cookies fire prior to explicit opt-in across EU regional endpoints.",
+      "assigneeId": "usr_mgr_marcus",
+      "createdById": "usr_mgr_marcus",
+      "priority": "URGENT",
+      "status": "IN_REVIEW",
+      "dueDate": "2026-09-29T04:50:08.677Z",
+      "labels": [
+        "Security",
+        "Compliance"
+      ],
+      "position": 0,
+      "createdAt": "2026-09-22T04:50:08.677Z",
+      "updatedAt": "2026-09-30T19:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mgr_marcus"
+      ]
+    },
+    {
+      "id": "tsk_24",
+      "projectId": "prj_marketing_platform",
+      "title": "Build webhook retry dead-letter queue inspector",
+      "description": "Allow project managers to inspect and replay failed outbound marketing automation events.",
+      "assigneeId": "usr_mem_elena",
+      "createdById": "usr_mgr_marcus",
+      "priority": "MEDIUM",
+      "status": "TODO",
+      "dueDate": "2026-10-12T04:50:08.677Z",
+      "labels": [
+        "Backend",
+        "Infrastructure"
+      ],
+      "position": 1,
+      "createdAt": "2026-09-26T04:50:08.677Z",
+      "updatedAt": "2026-09-29T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_elena"
+      ]
+    },
+    {
+      "id": "tsk_25",
+      "projectId": "prj_marketing_platform",
+      "title": "Set up A/B experiment cohorts for interactive product tour",
+      "description": "Measure activation lift between guided 3-step workspace setup vs instant template provisioning.",
+      "assigneeId": "usr_mem_liam",
+      "createdById": "usr_mgr_marcus",
+      "priority": "LOW",
+      "status": "TODO",
+      "dueDate": "2026-10-15T04:50:08.677Z",
+      "labels": [
+        "Experiments",
+        "Growth"
+      ],
+      "position": 2,
+      "createdAt": "2026-09-27T04:50:08.677Z",
+      "updatedAt": "2026-09-30T04:50:08.677Z",
+      "assignmentMode": "INDIVIDUAL",
+      "teamAssigneeIds": [
+        "usr_mem_liam"
+      ]
+    }
+  ],
+  "comments": [
+    {
+      "id": "cmt_01",
+      "taskId": "tsk_02",
+      "userId": "usr_mgr_sarah",
+      "content": "Make sure the Admin, Manager, and Member portal cards each display authentic UI fragments with zero placeholder copy.",
+      "createdAt": "2026-09-30T10:50:08.677Z",
+      "updatedAt": "2026-09-30T10:50:08.677Z"
+    },
+    {
+      "id": "cmt_02",
+      "taskId": "tsk_02",
+      "userId": "usr_mem_david",
+      "content": "Implemented the split-screen hero with role-specific glass cards and subtle dot-grid background. Ready for design review this afternoon.",
+      "createdAt": "2026-09-30T22:50:08.677Z",
+      "updatedAt": "2026-09-30T22:50:08.677Z"
+    },
+    {
+      "id": "cmt_03",
+      "taskId": "tsk_11",
+      "userId": "usr_admin_alex",
+      "content": "Security check: remember that if a Team Member drags a task not assigned to them, the backend RLS policy will reject the mutation and the board must roll back cleanly.",
+      "createdAt": "2026-09-30T14:50:08.677Z",
+      "updatedAt": "2026-09-30T14:50:08.677Z"
+    },
+    {
+      "id": "cmt_04",
+      "taskId": "tsk_11",
+      "userId": "usr_mem_david",
+      "content": "Confirmed! Added optimistic state snapshot prior to PATCH /api/tasks/:id so any 403 or 500 response restores the exact column ordering and triggers an error toast.",
+      "createdAt": "2026-10-01T02:50:08.677Z",
+      "updatedAt": "2026-10-01T02:50:08.677Z"
+    },
+    {
+      "id": "cmt_05",
+      "taskId": "tsk_03",
+      "userId": "usr_mem_elena",
+      "content": "Index size reduced by 62% after stripping stop words. Benchmarks show 11ms p99 latency.",
+      "createdAt": "2026-09-30T19:50:08.677Z",
+      "updatedAt": "2026-09-30T19:50:08.677Z"
+    },
+    {
+      "id": "cmt_06",
+      "taskId": "tsk_15",
+      "userId": "usr_mgr_sarah",
+      "content": "Verified MIME validation on PDF, PNG, JPEG, WEBP, DOC, DOCX, and TXT files with the strict 10 MB ceiling.",
+      "createdAt": "2026-10-01T00:50:08.677Z",
+      "updatedAt": "2026-10-01T00:50:08.677Z"
+    }
+  ],
+  "attachments": [
+    {
+      "id": "att_01",
+      "taskId": "tsk_02",
+      "uploadedById": "usr_mgr_sarah",
+      "fileName": "primemeet-design-tokens-v2.pdf",
+      "fileUrl": "/api/attachments/att_01/download",
+      "fileType": "application/pdf",
+      "fileSize": 428500,
+      "createdAt": "2026-09-30T12:50:08.677Z"
+    },
+    {
+      "id": "att_02",
+      "taskId": "tsk_11",
+      "uploadedById": "usr_mem_david",
+      "fileName": "kanban-optimistic-rollback-spec.txt",
+      "fileUrl": "/api/attachments/att_02/download",
+      "fileType": "text/plain",
+      "fileSize": 18420,
+      "createdAt": "2026-09-30T23:50:08.677Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "ntf_01",
+      "userId": "usr_mem_david",
+      "type": "TASK_ASSIGNED",
+      "message": "Sarah Chen assigned you to \"Implement optimistic drag-and-drop state engine with rollback\"",
+      "isRead": false,
+      "link": "/projects/prj_mobile_app?task=tsk_11",
+      "createdAt": "2026-09-30T16:50:08.677Z"
+    },
+    {
+      "id": "ntf_02",
+      "userId": "usr_mem_david",
+      "type": "NEW_COMMENT",
+      "message": "Alex Rivera commented on \"Implement optimistic drag-and-drop state engine with rollback\"",
+      "isRead": false,
+      "link": "/projects/prj_mobile_app?task=tsk_11",
+      "createdAt": "2026-09-30T20:50:08.677Z"
+    },
+    {
+      "id": "ntf_03",
+      "userId": "usr_mem_david",
+      "type": "DEADLINE_APPROACHING",
+      "message": "Task \"Build interactive hero preview with role-based glass cards\" is due today",
+      "isRead": false,
+      "link": "/projects/prj_website_redesign?task=tsk_02",
+      "createdAt": "2026-10-01T01:50:08.677Z"
+    },
+    {
+      "id": "ntf_04",
+      "userId": "usr_mem_david",
+      "type": "STATUS_CHANGED",
+      "message": "Sarah Chen moved \"Attachment uploader with 10MB validation\" to IN_REVIEW",
+      "isRead": true,
+      "link": "/projects/prj_mobile_app?task=tsk_15",
+      "createdAt": "2026-09-30T04:50:08.677Z"
+    },
+    {
+      "id": "ntf_05",
+      "userId": "usr_mgr_sarah",
+      "type": "NEW_COMMENT",
+      "message": "David Kim commented on \"Build interactive hero preview with role-based glass cards\"",
+      "isRead": false,
+      "link": "/projects/prj_website_redesign?task=tsk_02",
+      "createdAt": "2026-09-30T22:50:08.677Z"
+    },
+    {
+      "id": "ntf_06",
+      "userId": "usr_mgr_sarah",
+      "type": "DEADLINE_APPROACHING",
+      "message": "Project \"Mobile Application\" has 2 overdue tasks requiring attention",
+      "isRead": false,
+      "link": "/projects/prj_mobile_app",
+      "createdAt": "2026-10-01T02:50:08.677Z"
+    },
+    {
+      "id": "ntf_07",
+      "userId": "usr_admin_alex",
+      "type": "STATUS_CHANGED",
+      "message": "Elena Rostova moved \"Migrate documentation search index\" to IN_REVIEW",
+      "isRead": true,
+      "link": "/projects/prj_website_redesign?task=tsk_03",
+      "createdAt": "2026-09-30T23:50:08.677Z"
+    }
+  ],
+  "activityLogs": [
+    {
+      "id": "act_b360ab5cecf3",
+      "userId": "usr_admin_alex",
+      "projectId": "prj_54e48bddfbaa",
+      "taskId": null,
+      "action": "PROJECT_CREATED",
+      "description": "Created project \"Shopify\"",
+      "createdAt": "2026-10-01T06:57:44.021Z"
+    },
+    {
+      "id": "act_06c22fa7e93f",
+      "userId": "usr_admin_alex",
+      "projectId": "prj_website_redesign",
+      "taskId": null,
+      "action": "PROJECT_ARCHIVED",
+      "description": "Archived project \"Website Redesign\"",
+      "createdAt": "2026-10-01T06:55:06.672Z"
+    },
+    {
+      "id": "act_01",
+      "userId": "usr_admin_alex",
+      "projectId": null,
+      "taskId": null,
+      "action": "ORGANIZATION_CREATED",
+      "description": "Created organization \"PrimeMeet Labs\" (primemeet-labs)",
+      "createdAt": "2026-09-01T04:50:08.677Z"
+    },
+    {
+      "id": "act_02",
+      "userId": "usr_mgr_sarah",
+      "projectId": "prj_website_redesign",
+      "taskId": null,
+      "action": "PROJECT_CREATED",
+      "description": "Created project \"Website Redesign\" with HIGH priority",
+      "createdAt": "2026-09-02T04:50:08.677Z"
+    },
+    {
+      "id": "act_03",
+      "userId": "usr_mgr_sarah",
+      "projectId": "prj_mobile_app",
+      "taskId": null,
+      "action": "PROJECT_CREATED",
+      "description": "Created project \"Mobile Application\" with URGENT priority",
+      "createdAt": "2026-09-10T04:50:08.677Z"
+    },
+    {
+      "id": "act_04",
+      "userId": "usr_mgr_marcus",
+      "projectId": "prj_marketing_platform",
+      "taskId": null,
+      "action": "PROJECT_CREATED",
+      "description": "Created project \"Marketing Platform\" in PLANNING status",
+      "createdAt": "2026-09-21T04:50:08.677Z"
+    },
+    {
+      "id": "act_05",
+      "userId": "usr_mem_david",
+      "projectId": "prj_mobile_app",
+      "taskId": "tsk_15",
+      "action": "TASK_STATUS_CHANGED",
+      "description": "Moved task \"Attachment uploader with 10MB validation and MIME allowlist\" from IN_PROGRESS to IN_REVIEW",
+      "createdAt": "2026-10-01T00:50:08.677Z"
+    },
+    {
+      "id": "act_06",
+      "userId": "usr_mem_david",
+      "projectId": "prj_mobile_app",
+      "taskId": "tsk_11",
+      "action": "COMMENT_ADDED",
+      "description": "Added a comment on \"Implement optimistic drag-and-drop state engine with rollback\"",
+      "createdAt": "2026-10-01T02:50:08.677Z"
+    },
+    {
+      "id": "act_07",
+      "userId": "usr_mem_elena",
+      "projectId": "prj_website_redesign",
+      "taskId": "tsk_03",
+      "action": "TASK_STATUS_CHANGED",
+      "description": "Moved task \"Migrate documentation search index to sub-50ms query engine\" to IN_REVIEW",
+      "createdAt": "2026-09-30T22:50:08.677Z"
+    }
+  ],
+  "sessions": [
+    {
+      "token": "pm_sess_685230a6c27aa236e4871ef0e980c2b5e57c25ffbfe5860d",
+      "userId": "usr_mgr_sarah",
+      "expiresAt": "2026-10-15T05:15:33.180Z",
+      "createdAt": "2026-10-01T05:15:33.180Z"
+    },
+    {
+      "token": "pm_sess_0e037b7b39371af63e3e52e58bb4b5c59d0e9349671ac64a",
+      "userId": "usr_admin_alex",
+      "expiresAt": "2026-10-15T06:32:36.076Z",
+      "createdAt": "2026-10-01T06:32:36.076Z"
+    },
+    {
+      "token": "pm_sess_5a7efd9161ef514ec7bdb21312b5c2b1c1bc19371f322ff9",
+      "userId": "usr_admin_alex",
+      "expiresAt": "2026-10-15T06:32:36.949Z",
+      "createdAt": "2026-10-01T06:32:36.949Z"
+    },
+    {
+      "token": "pm_sess_021e8798e9f20d5d0fba653b0f12eac5e6cb13a10d03df61",
+      "userId": "usr_admin_alex",
+      "expiresAt": "2026-10-15T07:04:24.966Z",
+      "createdAt": "2026-10-01T07:04:24.967Z"
+    },
+    {
+      "token": "pm_sess_120ab3e31c86dcebf73e780c21b4bccb43fc3c81de8dd80f",
+      "userId": "usr_mgr_sarah",
+      "expiresAt": "2026-10-15T07:06:18.833Z",
+      "createdAt": "2026-10-01T07:06:18.833Z"
+    },
+    {
+      "token": "pm_sess_02a37ecad75f0da49dacb4c468fd3c45ea63f7bbaedde183",
+      "userId": "usr_mgr_sarah",
+      "expiresAt": "2026-10-15T08:38:53.829Z",
+      "createdAt": "2026-10-01T08:38:53.829Z"
+    },
+    {
+      "token": "pm_sess_cbce3480083845a5cc7a7d45b379fb1749e806ec3b9e7ecf",
+      "userId": "usr_admin_alex",
+      "expiresAt": "2026-10-15T08:59:45.172Z",
+      "createdAt": "2026-10-01T08:59:45.172Z"
+    },
+    {
+      "token": "pm_sess_dbb40086a0c4f09eca555de286bcd195b693023771aa5d15",
+      "userId": "usr_admin_alex",
+      "expiresAt": "2026-10-15T08:59:45.223Z",
+      "createdAt": "2026-10-01T08:59:45.223Z"
+    },
+    {
+      "token": "pm_sess_ce9d874587b525db2fd9157a26d62068012049891d4bab3a",
+      "userId": "usr_mgr_sarah",
+      "expiresAt": "2026-10-15T08:59:48.688Z",
+      "createdAt": "2026-10-01T08:59:48.688Z"
+    },
+    {
+      "token": "pm_sess_10c9b04324c680b10da91bf1723a124f296e38ad7a911636",
+      "userId": "usr_mem_david",
+      "expiresAt": "2026-10-15T08:59:55.016Z",
+      "createdAt": "2026-10-01T08:59:55.016Z"
+    }
+  ]
+}

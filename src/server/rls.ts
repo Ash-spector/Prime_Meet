@@ -1,12 +1,13 @@
 import {
-  Attachment,
-  Comment,
-  Project,
-  Task,
-  User,
+  type Attachment,
+  type Comment,
+  type Project,
+  type ProjectType,
+  type Task,
+  type User,
   UserRole,
 } from '../shared/types.ts';
-import { DatabaseSchema } from './seed.ts';
+import type { DatabaseSchema } from './seed.ts';
 
 export class PermissionDeniedError extends Error {
   public readonly statusCode = 403;
@@ -129,7 +130,7 @@ export const RLS = {
    * Rule 5: Task Visibility, Creation, Update, and Deletion.
    * - SUPER_ADMIN: full access
    * - PROJECT_MANAGER: create, edit, delete, and assign tasks in their own projects
-   * - TEAM_MEMBER: view tasks in projects they belong to; ONLY update status (and Kanban position) of tasks assigned to them
+   * - TEAM_MEMBER: view tasks in projects they belong to; ONLY update status (and Kanban position) of tasks assigned to them or their team
    */
   filterVisibleTasks(actor: User, db: DatabaseSchema): Task[] {
     const visibleProjectIds = new Set(
@@ -165,7 +166,11 @@ export const RLS = {
     }
 
     if (actor.role === UserRole.PROJECT_MANAGER) {
-      if (project.managerId !== actor.id) {
+      const isAssignedToPm =
+        task.assigneeId === actor.id ||
+        (Array.isArray(task.teamAssigneeIds) &&
+          task.teamAssigneeIds.includes(actor.id));
+      if (project.managerId !== actor.id && !isAssignedToPm) {
         throw new PermissionDeniedError(
           'RLS_TASK_MANAGER_OWNERSHIP',
           "You don't have permission to edit tasks in a project managed by another Project Manager."
@@ -174,8 +179,12 @@ export const RLS = {
       return;
     }
 
-    // TEAM_MEMBER rules:
-    if (task.assigneeId !== actor.id) {
+    // TEAM_MEMBER rules: allowed if assigned individually OR included in teamAssigneeIds
+    const isAssignedToActor =
+      task.assigneeId === actor.id ||
+      (Array.isArray(task.teamAssigneeIds) && task.teamAssigneeIds.includes(actor.id));
+
+    if (!isAssignedToActor) {
       throw new PermissionDeniedError(
         'RLS_TASK_ASSIGNEE_ONLY',
         "You don't have permission to update this task because it is not assigned to you."
@@ -187,6 +196,8 @@ export const RLS = {
       'title',
       'description',
       'assigneeId',
+      'assignmentMode',
+      'teamAssigneeIds',
       'priority',
       'dueDate',
       'labels',
@@ -209,9 +220,6 @@ export const RLS = {
 
   /**
    * Rule 6: Comments.
-   * - Any member of the project can add a comment.
-   * - Users can ONLY edit or delete their own comments (SUPER_ADMIN can also moderate/delete if needed,
-   *   but TEAM_MEMBER and PROJECT_MANAGER cannot edit or delete other users' comments).
    */
   assertCanAddComment(actor: User, project: Project, db: DatabaseSchema): void {
     this.assertCanViewProject(actor, project, db);
@@ -237,8 +245,6 @@ export const RLS = {
 
   /**
    * Rule 7: Attachments.
-   * - Members of the project can upload attachments.
-   * - Uploader, Project Manager of the project, or Super Admin can delete an attachment.
    */
   assertCanUploadAttachment(actor: User, project: Project, db: DatabaseSchema): void {
     this.assertCanViewProject(actor, project, db);
@@ -260,13 +266,17 @@ export const RLS = {
 
   /**
    * Rule 8: User Profile & Role Updates.
-   * - Users can edit their own name/avatar.
-   * - Only SUPER_ADMIN can edit other users or change any user's role.
    */
   assertCanUpdateUser(
     actor: User,
     targetUser: User,
-    updates: { name?: string; avatar?: string; role?: UserRole }
+    updates: {
+      name?: string;
+      avatar?: string;
+      role?: UserRole;
+      specialization?: ProjectType;
+      managerId?: string | null;
+    }
   ): void {
     if (actor.role === UserRole.SUPER_ADMIN) {
       return;
