@@ -1,0 +1,6 @@
+{
+  "name": "PrimeMeet",
+  "description": "Plan clearly. Collaborate better. Ship faster. A Project Management & Team Collaboration Platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
